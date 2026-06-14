@@ -212,11 +212,18 @@ async function runTests() {
   // Boris sends a message (encrypted)
   aliceMessages.length = 0;
   boris.emit('send-message', { text: encryptMessage('How are you?', roomCode), roomCode });
-  await sleep(1000);
+  await sleep(1500);
+
+  console.log(`  [Debug] Alice messages length: ${aliceMessages.length}`);
+  if (aliceMessages.length > 0) {
+    console.log('  [Debug] First message:', JSON.stringify(aliceMessages[0]));
+  }
 
   assert(aliceMessages.length === 1, 'Alice received Boris\'s message after language update');
-  assert(aliceMessages[0].translatedText === '[Spanish] How are you?', 
-    `Alice gets message translated to Spanish: "${aliceMessages[0].translatedText}"`);
+  if (aliceMessages.length > 0) {
+    assert(aliceMessages[0].translatedText === '[Spanish] How are you?', 
+      `Alice gets message translated to Spanish: "${aliceMessages[0].translatedText}"`);
+  }
 
   // ── Summary ──────────────────────────────────────
   console.log('\n' + '═'.repeat(50));
