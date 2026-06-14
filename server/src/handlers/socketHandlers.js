@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const { translateForRecipients } = require('../services/translationService');
 const { saveRoom, saveMessage } = require('../config/firebase');
 const { isValidLanguage, getLanguageInfo } = require('../utils/languages');
+const { encryptMessage, decryptMessage } = require('../utils/crypto');
 
 // ── In-Memory Storage ─────────────────────────────
 // Map<roomCode, { users: Map<socketId, userInfo>, messages: [] }>
@@ -177,6 +178,35 @@ function registerSocketHandlers(io, socket) {
     }
   });
 
+  // ── Update Language ───────────────────────────────
+  socket.on('update-language', ({ lang, roomCode }) => {
+    try {
+      if (!isValidLanguage(lang)) {
+        return socket.emit('error', { message: 'Invalid language selection' });
+      }
+
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
+
+      if (!room || !room.users.has(socket.id)) {
+        return socket.emit('error', { message: 'You are not in this room' });
+      }
+
+      const user = room.users.get(socket.id);
+      const oldLang = user.lang;
+      user.lang = lang;
+      socket.userLang = lang;
+
+      console.log(`[Language] ${user.name} in ${code} changed language from ${oldLang} to ${lang}`);
+
+      // Broadcast updated user list to everyone
+      io.to(code).emit('room-users', { users: getRoomUsers(code) });
+    } catch (error) {
+      console.error('[Socket] Error updating language:', error);
+      socket.emit('error', { message: 'Failed to update language' });
+    }
+  });
+
   // ── Send Message ──────────────────────────────────
   socket.on('send-message', async ({ text, roomCode }) => {
     try {
@@ -190,10 +220,14 @@ function registerSocketHandlers(io, socket) {
         return;
       }
 
+      // Decrypt incoming message
+      const decryptedText = decryptMessage(text, code);
+      if (!decryptedText || !decryptedText.trim()) return;
+
       const sender = room.users.get(socket.id);
       const messageId = uuidv4();
       const timestamp = Date.now();
-      const originalText = text.trim();
+      const originalText = decryptedText.trim();
 
       // Notify room that translation is in progress
       socket.to(code).emit('translating', { senderName: sender.name });
@@ -213,14 +247,21 @@ function registerSocketHandlers(io, socket) {
         recipientLangs
       );
 
-      // Build the full message object for storage
+      // Encrypt original and translated text for storage
+      const encryptedOriginalText = encryptMessage(originalText, code);
+      const encryptedTranslations = {};
+      for (const lang in translations) {
+        encryptedTranslations[lang] = encryptMessage(translations[lang], code);
+      }
+
+      // Build the full message object for storage (all text is encrypted)
       const messageData = {
         id: messageId,
         senderId: socket.id,
         senderName: sender.name,
         senderLang: sender.lang,
-        originalText,
-        translations,
+        originalText: encryptedOriginalText,
+        translations: encryptedTranslations,
         timestamp,
       };
 
@@ -235,36 +276,37 @@ function registerSocketHandlers(io, socket) {
       // Persist to Firebase (optional)
       saveMessage(code, messageData);
 
-      // Send the original message back to the sender
+      // Send the encrypted message back to the sender
       socket.emit('receive-message', {
         id: messageId,
         senderId: socket.id,
         senderName: sender.name,
         senderLang: sender.lang,
-        translatedText: originalText, // Sender sees original
-        originalText,
+        translatedText: encryptedOriginalText, // Sender sees original
+        originalText: encryptedOriginalText,
         isOwn: true,
         timestamp,
       });
 
-      // Send translated messages to each recipient
+      // Send encrypted translated messages to each recipient
       for (const [sid, user] of room.users) {
         if (sid !== socket.id) {
           const translatedText = translations[user.lang] || originalText;
+          const encryptedTranslatedText = encryptMessage(translatedText, code);
           io.to(sid).emit('receive-message', {
             id: messageId,
             senderId: socket.id,
             senderName: sender.name,
             senderLang: sender.lang,
-            translatedText,
-            originalText,
+            translatedText: encryptedTranslatedText,
+            originalText: encryptedOriginalText,
             isOwn: false,
             timestamp,
           });
         }
       }
 
-      console.log(`[Message] ${sender.name} in ${code}: "${originalText}" → translated to ${Object.keys(translations).join(', ')}`);
+      console.log(`[Message] ${sender.name} in ${code}: [Encrypted Message] → translated and encrypted for ${Object.keys(translations).join(', ')}`);
     } catch (error) {
       console.error('[Socket] Error sending message:', error);
       socket.emit('error', { message: 'Failed to send message' });

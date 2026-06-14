@@ -6,6 +6,7 @@ import Sidebar from '../Layout/Sidebar';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import TranslatingIndicator from './TranslatingIndicator';
+import { encryptMessage, decryptMessage } from '../../utils/crypto';
 
 export default function ChatRoom() {
   const { socket, isConnected } = useSocket();
@@ -39,7 +40,12 @@ export default function ChatRoom() {
     if (!socket) return;
 
     const handleReceiveMessage = (message) => {
-      setMessages((prev) => [...prev, message]);
+      const decrypted = {
+        ...message,
+        translatedText: decryptMessage(message.translatedText, roomCode),
+        originalText: decryptMessage(message.originalText, roomCode),
+      };
+      setMessages((prev) => [...prev, decrypted]);
       setTranslating(null);
     };
 
@@ -101,7 +107,8 @@ export default function ChatRoom() {
 
   const handleSendMessage = (text) => {
     if (!socket || !roomCode) return;
-    socket.emit('send-message', { text, roomCode });
+    const encryptedText = encryptMessage(text, roomCode);
+    socket.emit('send-message', { text: encryptedText, roomCode });
   };
 
   const handleLeave = () => {

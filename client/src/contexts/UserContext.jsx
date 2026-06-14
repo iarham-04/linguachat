@@ -29,6 +29,15 @@ export function UserProvider({ children }) {
     sessionStorage.removeItem('linguachat_room');
   }, []);
 
+  const changeLanguage = useCallback((newLang) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, lang: newLang };
+      sessionStorage.setItem('linguachat_user', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     setRoomCode(null);
@@ -37,7 +46,7 @@ export function UserProvider({ children }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, roomCode, login, joinRoom, leaveRoom, logout }}>
+    <UserContext.Provider value={{ user, roomCode, login, joinRoom, leaveRoom, logout, changeLanguage }}>
       {children}
     </UserContext.Provider>
   );

@@ -8,6 +8,7 @@
  */
 
 const { io } = require('socket.io-client');
+const { encryptMessage, decryptMessage } = require('../src/utils/crypto');
 
 const SERVER_URL = 'http://localhost:3001';
 let passed = 0;
@@ -89,15 +90,28 @@ async function runTests() {
   // ── Test 4: Send Message & Translation ───────────
   console.log('\n📋 Test 4: Send Message & Translation');
 
-  // Set up message listeners
+  // Set up message listeners with decryption
   const aliceMessages = [];
   const borisMessages = [];
 
-  alice.on('receive-message', (msg) => aliceMessages.push(msg));
-  boris.on('receive-message', (msg) => borisMessages.push(msg));
+  alice.on('receive-message', (msg) => {
+    aliceMessages.push({
+      ...msg,
+      translatedText: decryptMessage(msg.translatedText, roomCode),
+      originalText: decryptMessage(msg.originalText, roomCode),
+    });
+  });
 
-  // Alice sends a message
-  alice.emit('send-message', { text: 'Hello, Boris!', roomCode });
+  boris.on('receive-message', (msg) => {
+    borisMessages.push({
+      ...msg,
+      translatedText: decryptMessage(msg.translatedText, roomCode),
+      originalText: decryptMessage(msg.originalText, roomCode),
+    });
+  });
+
+  // Alice sends a message (encrypted)
+  alice.emit('send-message', { text: encryptMessage('Hello, Boris!', roomCode), roomCode });
 
   // Wait for translation to complete
   await sleep(1000);
@@ -121,8 +135,8 @@ async function runTests() {
   aliceMessages.length = 0;
   borisMessages.length = 0;
 
-  // Boris sends a message
-  boris.emit('send-message', { text: 'Привет, Алиса!', roomCode });
+  // Boris sends a message (encrypted)
+  boris.emit('send-message', { text: encryptMessage('Привет, Алиса!', roomCode), roomCode });
 
   await sleep(1000);
 
@@ -147,13 +161,19 @@ async function runTests() {
   assert(carlosJoin.users.length === 3, '3 users in room');
 
   const carlosMessages = [];
-  carlos.on('receive-message', (msg) => carlosMessages.push(msg));
+  carlos.on('receive-message', (msg) => {
+    carlosMessages.push({
+      ...msg,
+      translatedText: decryptMessage(msg.translatedText, roomCode),
+      originalText: decryptMessage(msg.originalText, roomCode),
+    });
+  });
 
   aliceMessages.length = 0;
   borisMessages.length = 0;
 
-  // Alice sends to everyone
-  alice.emit('send-message', { text: 'Hello everyone!', roomCode });
+  // Alice sends to everyone (encrypted)
+  alice.emit('send-message', { text: encryptMessage('Hello everyone!', roomCode), roomCode });
   await sleep(1000);
 
   assert(borisMessages.length === 1 && borisMessages[0].translatedText === '[Russian] Hello everyone!',
@@ -181,6 +201,22 @@ async function runTests() {
   assert(join5.error !== undefined, '5th user rejected — room is full');
 
   user5.disconnect();
+
+  // ── Test 8: Live Language Switching ────────────────
+  console.log('\n📋 Test 8: Live Language Switching');
+
+  // Alice changes her language from 'en' to 'es' (Spanish)
+  alice.emit('update-language', { lang: 'es', roomCode });
+  await sleep(200);
+
+  // Boris sends a message (encrypted)
+  aliceMessages.length = 0;
+  boris.emit('send-message', { text: encryptMessage('How are you?', roomCode), roomCode });
+  await sleep(1000);
+
+  assert(aliceMessages.length === 1, 'Alice received Boris\'s message after language update');
+  assert(aliceMessages[0].translatedText === '[Spanish] How are you?', 
+    `Alice gets message translated to Spanish: "${aliceMessages[0].translatedText}"`);
 
   // ── Summary ──────────────────────────────────────
   console.log('\n' + '═'.repeat(50));
