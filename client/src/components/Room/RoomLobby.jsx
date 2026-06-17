@@ -55,14 +55,14 @@ export default function RoomLobby() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#121212] p-4">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#121212] p-4 overflow-y-auto">
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#4CAF88]/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#f0c040]/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-sm animate-slide-up relative z-10">
+      <div className="w-full max-w-sm animate-slide-up relative z-10 py-6">
         {/* Header */}
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1e1e1e] mb-3 border border-[#2e2e2e] shadow-lg">
