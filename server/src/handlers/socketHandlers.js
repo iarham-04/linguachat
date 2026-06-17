@@ -51,7 +51,7 @@ function registerSocketHandlers(io, socket) {
   console.log(`[Socket] User connected: ${socket.id}`);
 
   // ── Create Room ───────────────────────────────────
-  socket.on('create-room', ({ userName, userLang }, callback) => {
+  socket.on('create-room', ({ userId, userName, userLang }, callback) => {
     try {
       if (!userName || !userName.trim()) {
         return callback({ error: 'Display name is required' });
@@ -77,6 +77,7 @@ function registerSocketHandlers(io, socket) {
       // Add creator to the room
       const room = rooms.get(roomCode);
       room.users.set(socket.id, {
+        id: userId,
         name: userName.trim(),
         lang: userLang,
         joinedAt: Date.now(),
@@ -107,7 +108,7 @@ function registerSocketHandlers(io, socket) {
   });
 
   // ── Join Room ─────────────────────────────────────
-  socket.on('join-room', ({ roomCode, userName, userLang }, callback) => {
+  socket.on('join-room', ({ roomCode, userId, userName, userLang }, callback) => {
     try {
       if (!userName || !userName.trim()) {
         return callback({ error: 'Display name is required' });
@@ -123,19 +124,31 @@ function registerSocketHandlers(io, socket) {
         return callback({ error: 'Room not found. Please check the room code.' });
       }
 
-      if (room.users.size >= 4) {
-        return callback({ error: 'Room is full (max 4 users)' });
-      }
-
-      // Check for duplicate names in the room (ignoring if it is the same socket re-joining)
-      for (const [socketId, user] of room.users) {
-        if (user.name.toLowerCase() === userName.trim().toLowerCase() && socketId !== socket.id) {
+      // Check for duplicate names in the room, ignoring if it is the same user re-joining (by userId or socketId)
+      const socketsToRemove = [];
+      for (const [socketId, u] of room.users) {
+        const isSameUser = (u.id && u.id === userId) || socketId === socket.id;
+        if (isSameUser) {
+          socketsToRemove.push(socketId);
+        } else if (u.name.toLowerCase() === userName.trim().toLowerCase()) {
           return callback({ error: 'A user with this name is already in the room' });
         }
       }
 
+      // Check capacity, but subtract if we are replacing ourselves
+      const effectiveSize = room.users.size - socketsToRemove.length;
+      if (effectiveSize >= 4) {
+        return callback({ error: 'Room is full (max 4 users)' });
+      }
+
+      // Remove the old socket entries (if any)
+      for (const sid of socketsToRemove) {
+        room.users.delete(sid);
+      }
+
       // Add user to room
       room.users.set(socket.id, {
+        id: userId,
         name: userName.trim(),
         lang: userLang,
         joinedAt: Date.now(),

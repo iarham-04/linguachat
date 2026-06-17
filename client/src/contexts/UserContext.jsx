@@ -17,7 +17,8 @@ export function UserProvider({ children }) {
   });
 
   const login = useCallback((userName, userLang) => {
-    const userData = { name: userName, lang: userLang };
+    const userId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const userData = { id: userId, name: userName, lang: userLang };
     setUser(userData);
     sessionStorage.setItem('linguachat_user', JSON.stringify(userData));
   }, []);

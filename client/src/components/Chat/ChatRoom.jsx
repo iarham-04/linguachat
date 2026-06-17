@@ -34,7 +34,7 @@ export default function ChatRoom() {
   useEffect(() => {
     if (!socket || !isConnected || !user || !roomCode) return;
 
-    socket.emit('join-room', { roomCode, userName: user.name, userLang: user.lang }, (res) => {
+    socket.emit('join-room', { roomCode, userId: user.id, userName: user.name, userLang: user.lang }, (res) => {
       if (res.error) {
         console.error('[ChatRoom] Auto-join failed:', res.error);
         // If join failed (e.g. room deleted or name taken), leave the room in UI

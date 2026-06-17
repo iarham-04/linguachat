@@ -21,6 +21,7 @@ export default function RoomLobby() {
     setError('');
 
     socket.emit('create-room', {
+      userId: user.id,
       userName: user.name,
       userLang: user.lang,
     }, (response) => {
@@ -46,6 +47,7 @@ export default function RoomLobby() {
 
     socket.emit('join-room', {
       roomCode: roomInput.trim().toUpperCase(),
+      userId: user.id,
       userName: user.name,
       userLang: user.lang,
     }, (response) => {
