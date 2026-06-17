@@ -1,7 +1,7 @@
 const CryptoJS = require('crypto-js');
 
 const ENCRYPTION_VERSION = 'v2';
-const PBKDF2_ITERATIONS = 120000;
+const PBKDF2_ITERATIONS = 25000;
 const PBKDF2_KEY_SIZE = 256 / 32;
 const SALT_BYTES = 16;
 const IV_BYTES = 16;
@@ -64,7 +64,7 @@ function encryptMessage(text, roomCode) {
     const mac = CryptoJS.HmacSHA256(payload, macKey).toString(CryptoJS.enc.Base64);
 
     return `${payload}.${mac}`;
-  } catch (error) {
+  } catch {
     return '';
   }
 }
@@ -105,7 +105,7 @@ function decryptMessage(ciphertext, roomCode) {
     // Backward compatibility for legacy ciphertext.
     const legacy = CryptoJS.AES.decrypt(ciphertext, roomCode).toString(CryptoJS.enc.Utf8);
     return legacy || '';
-  } catch (error) {
+  } catch {
     return '';
   }
 }
