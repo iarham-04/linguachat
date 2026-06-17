@@ -185,7 +185,7 @@ export default function ChatRoom() {
   return (
     <div className="h-[100dvh] w-screen flex items-center justify-center bg-theme-outer p-0 md:p-6 overflow-hidden">
       {/* Outer Floating Container */}
-      <div className="w-full h-full max-w-6xl md:h-[90vh] bg-theme-panel rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.65)] border border-theme-divider flex overflow-hidden relative">
+      <div className="w-full h-full max-w-6xl md:h-[90vh] bg-theme-outer rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.65)] border border-theme-divider flex overflow-hidden relative">
         
         {/* Left Sidebar Panel */}
         <div className={`${
@@ -202,7 +202,7 @@ export default function ChatRoom() {
         {/* Right Chat Panel */}
         <div className={`${
           activePanel === 'chat' ? 'flex' : 'hidden'
-        } md:flex flex-1 flex-col min-w-0 bg-theme-panel`}>
+        } md:flex flex-1 flex-col min-w-0 bg-transparent`}>
           
           {/* Top Bar */}
           <div className="h-14 px-4 flex items-center justify-between border-b border-theme-divider bg-theme-panel select-none">
@@ -242,7 +242,7 @@ export default function ChatRoom() {
           {/* Chat Messages Area */}
           <div
             ref={chatContainerRef}
-            className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scroll-smooth bg-theme-panel"
+            className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scroll-smooth bg-transparent"
           >
             {/* Date separator pill TODAY in center */}
             {messages.length > 0 && (
