@@ -41,6 +41,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
     e.preventDefault();
     if (!text.trim() || disabled) return;
     onSend(text.trim());
+    setText('');
     
     // Ensure height resets on submit
     if (inputRef.current) {
