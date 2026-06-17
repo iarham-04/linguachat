@@ -32,6 +32,19 @@ async function runTests() {
   console.log('\n🌐 LinguaChat E2E Test Suite\n');
   console.log('═'.repeat(50));
 
+  // ── Test 0: Crypto Integrity ───────────────────────
+  console.log('\n📋 Test 0: Encryption Integrity');
+  const testRoomCode = 'SECURE1';
+  const plainText = 'Confidential message';
+  const encrypted = encryptMessage(plainText, testRoomCode);
+  const decrypted = decryptMessage(encrypted, testRoomCode);
+  assert(encrypted && encrypted !== plainText, 'Ciphertext is not plaintext');
+  assert(decrypted === plainText, 'Encrypted payload decrypts with correct room key');
+  assert(decryptMessage(encrypted, 'WRONG1') === '', 'Wrong room key cannot decrypt payload');
+
+  const tamperedPayload = `${encrypted.slice(0, -2)}xx`;
+  assert(decryptMessage(tamperedPayload, testRoomCode) === '', 'Tampered payload fails integrity check');
+
   // ── Test 1: Create Room ──────────────────────────
   console.log('\n📋 Test 1: Create Room');
   

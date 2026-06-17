@@ -15,6 +15,11 @@ const { encryptMessage, decryptMessage } = require('../utils/crypto');
 // Map<roomCode, { users: Map<socketId, userInfo>, messages: [] }>
 const rooms = new Map();
 
+function maskRoomCode(roomCode) {
+  if (!roomCode || roomCode.length < 2) return 'unknown';
+  return `${roomCode.slice(0, 2)}****`;
+}
+
 /**
  * Generate a 6-character room code
  */
@@ -88,7 +93,7 @@ function registerSocketHandlers(io, socket) {
       // Persist to Firebase (optional)
       saveRoom(roomCode, { createdBy: userName.trim(), maxUsers: 4 });
 
-      console.log(`[Room] Created room ${roomCode} by ${userName} (${userLang})`);
+      console.log(`[Room] Created room ${maskRoomCode(roomCode)} by user`);
 
       callback({
         success: true,
@@ -144,7 +149,7 @@ function registerSocketHandlers(io, socket) {
       socket.userName = userName.trim();
       socket.userLang = userLang;
 
-      console.log(`[Room] ${userName} (${userLang}) joined room ${code}`);
+      console.log(`[Room] User joined room ${maskRoomCode(code)}`);
 
       // Send room state to the joining user
       callback({
@@ -197,7 +202,7 @@ function registerSocketHandlers(io, socket) {
       user.lang = lang;
       socket.userLang = lang;
 
-      console.log(`[Language] ${user.name} in ${code} changed language from ${oldLang} to ${lang}`);
+      console.log(`[Language] User in ${maskRoomCode(code)} changed language from ${oldLang} to ${lang}`);
 
       // Broadcast updated user list to everyone
       io.to(code).emit('room-users', { users: getRoomUsers(code) });
@@ -222,7 +227,10 @@ function registerSocketHandlers(io, socket) {
 
       // Decrypt incoming message
       const decryptedText = decryptMessage(text, code);
-      if (!decryptedText || !decryptedText.trim()) return;
+      if (!decryptedText || !decryptedText.trim()) {
+        socket.emit('error', { message: 'Invalid encrypted message payload' });
+        return;
+      }
 
       const sender = room.users.get(socket.id);
       const messageId = uuidv4();
@@ -306,7 +314,9 @@ function registerSocketHandlers(io, socket) {
         }
       }
 
-      console.log(`[Message] ${sender.name} in ${code}: [Encrypted Message] → translated and encrypted for ${Object.keys(translations).join(', ')}`);
+      console.log(
+        `[Message] Encrypted message in ${maskRoomCode(code)} translated for ${Object.keys(translations).length} language target(s)`
+      );
     } catch (error) {
       console.error('[Socket] Error sending message:', error);
       socket.emit('error', { message: 'Failed to send message' });
@@ -321,7 +331,7 @@ function registerSocketHandlers(io, socket) {
       const room = rooms.get(roomCode);
       room.users.delete(socket.id);
 
-      console.log(`[Room] ${socket.userName} left room ${roomCode}`);
+      console.log(`[Room] User left room ${maskRoomCode(roomCode)}`);
 
       // Notify others
       socket.to(roomCode).emit('user-left', {
@@ -337,7 +347,7 @@ function registerSocketHandlers(io, socket) {
         setTimeout(() => {
           if (rooms.has(roomCode) && rooms.get(roomCode).users.size === 0) {
             rooms.delete(roomCode);
-            console.log(`[Room] Deleted empty room ${roomCode}`);
+            console.log(`[Room] Deleted empty room ${maskRoomCode(roomCode)}`);
           }
         }, 60000); // 1 minute grace period
       }

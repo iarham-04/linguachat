@@ -204,6 +204,8 @@ Same pattern — create `deeplTranslator.js` implementing `translate(text, sourc
 | `PORT` | `3001` | Backend server port |
 | `TRANSLATION_PROVIDER` | `mock` | Translation backend: `mock`, `google`, `deepl` |
 | `GOOGLE_API_KEY` | — | Google Cloud Translation API key |
+| `MESSAGE_ENCRYPTION_SECRET` | — | Optional extra server-side secret mixed into message key derivation |
+| `VITE_MESSAGE_ENCRYPTION_SECRET` | — | Optional client-side counterpart to keep client/server encryption keys aligned |
 | `FIREBASE_PROJECT_ID` | — | Firebase project ID (enables Firestore) |
 | `FIREBASE_CLIENT_EMAIL` | — | Firebase service account email |
 | `FIREBASE_PRIVATE_KEY` | — | Firebase service account private key |
