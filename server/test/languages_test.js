@@ -1,6 +1,6 @@
 const { translate } = require('../src/services/mockTranslator');
 
-const LANGUAGES = ['en', 'hi', 'ru', 'es', 'fr', 'de', 'zh', 'ar', 'pt', 'ja'];
+const LANGUAGES = ['en', 'hi', 'ru', 'es', 'fr', 'de', 'zh', 'ar', 'pt', 'ja', 'tr'];
 
 const HELLO_WORDS = {
   en: 'Hello',
@@ -12,7 +12,8 @@ const HELLO_WORDS = {
   zh: '你好',
   ar: 'مرحباً',
   pt: 'Olá',
-  ja: 'こんにちは'
+  ja: 'こんにちは',
+  tr: 'Merhaba'
 };
 
 const YES_WORDS = {
@@ -25,7 +26,8 @@ const YES_WORDS = {
   zh: '是的',
   ar: 'نعم',
   pt: 'Sim',
-  ja: 'はい'
+  ja: 'はい',
+  tr: 'Evet'
 };
 
 const NO_WORDS = {
@@ -38,11 +40,12 @@ const NO_WORDS = {
   zh: '不',
   ar: 'لا',
   pt: 'Não',
-  ja: 'いいえ'
+  ja: 'いいえ',
+  tr: 'Hayır'
 };
 
 async function runTests() {
-  console.log('\n🌐 Running Translation Tests for All 10 Languages\n');
+  console.log('\n🌐 Running Translation Tests for All 11 Languages\n');
   console.log('═'.repeat(60));
 
   let passed = 0;

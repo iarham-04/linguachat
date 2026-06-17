@@ -20,7 +20,7 @@ LinguaChat breaks language barriers by automatically translating messages server
 
 ### Step 1: Login & Setup
 1. **Enter Username**: Type a unique display name (max 15 characters).
-2. **Select Your Language**: Choose from 10 supported languages:
+2. **Select Your Language**: Choose from 11 supported languages:
    * 🇺🇸 English (`en`)
    * 🇮🇳 Hindi (`hi`)
    * 🇷🇺 Russian (`ru`)
@@ -31,6 +31,7 @@ LinguaChat breaks language barriers by automatically translating messages server
    * 🇸🇦 Arabic (`ar`)
    * 🇵🇹 Portuguese (`pt`)
    * 🇯🇵 Japanese (`ja`)
+   * 🇹🇷 Turkish (`tr`)
 3. **Choose Avatar**: Enter a text character or select an emoji avatar.
 4. **Choose Action**:
    * **Create Room**: Click this to host a new chat session.

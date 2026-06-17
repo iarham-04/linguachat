@@ -14,6 +14,7 @@ export const LANGUAGES = [
   { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
   { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇧🇷' },
   { code: 'ja', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
 ];
 
 /**

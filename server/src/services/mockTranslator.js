@@ -29,6 +29,7 @@ const LANGUAGE_NAMES = {
   ar: 'Arabic',
   pt: 'Portuguese',
   ja: 'Japanese',
+  tr: 'Turkish',
 };
 
 const DICTIONARY = {
@@ -42,7 +43,8 @@ const DICTIONARY = {
     zh: '你好',
     ar: 'مرحباً',
     pt: 'Olá',
-    ja: 'こんにちは'
+    ja: 'こんにちは',
+    tr: 'Merhaba'
   },
   'hi': {
     en: 'Hi',
@@ -54,7 +56,8 @@ const DICTIONARY = {
     zh: '你好',
     ar: 'مرحباً',
     pt: 'Oi',
-    ja: 'こんにちは'
+    ja: 'こんにちは',
+    tr: 'Merhaba'
   },
   'hello!': {
     en: 'Hello!',
@@ -66,7 +69,8 @@ const DICTIONARY = {
     zh: '你好！',
     ar: 'مرحباً!',
     pt: 'Olá!',
-    ja: 'こんにちは！'
+    ja: 'こんにちは！',
+    tr: 'Merhaba!'
   },
   'how are you?': {
     en: 'How are you?',
@@ -76,9 +80,10 @@ const DICTIONARY = {
     fr: 'Comment ça va?',
     de: 'Wie geht es dir?',
     zh: '你好吗？',
-    ar: 'كيف حالك؟',
+    ar: 'كيف حالك？',
     pt: 'Como você está?',
-    ja: 'お元気ですか？'
+    ja: 'お元気ですか？',
+    tr: 'Nasılsın?'
   },
   'how are you': {
     en: 'How are you',
@@ -90,7 +95,8 @@ const DICTIONARY = {
     zh: '你好吗',
     ar: 'كيف حالك',
     pt: 'Como você está',
-    ja: 'お元気ですか'
+    ja: 'お元気ですか',
+    tr: 'Nasılsın'
   },
   'good morning': {
     en: 'Good morning',
@@ -102,7 +108,8 @@ const DICTIONARY = {
     zh: '早上好',
     ar: 'صباح الخير',
     pt: 'Bom dia',
-    ja: 'おはようございます'
+    ja: 'おはようございます',
+    tr: 'Günaydın'
   },
   'good morning!': {
     en: 'Good morning!',
@@ -114,7 +121,8 @@ const DICTIONARY = {
     zh: '早上好！',
     ar: 'صباح الخير!',
     pt: 'Bom dia!',
-    ja: 'おはようございます！'
+    ja: 'おはようございます！',
+    tr: 'Günaydın!'
   },
   'yes': {
     en: 'Yes',
@@ -126,7 +134,8 @@ const DICTIONARY = {
     zh: '是的',
     ar: 'نعم',
     pt: 'Sim',
-    ja: 'はい'
+    ja: 'はい',
+    tr: 'Evet'
   },
   'no': {
     en: 'No',
@@ -138,7 +147,8 @@ const DICTIONARY = {
     zh: '不',
     ar: 'لا',
     pt: 'Não',
-    ja: 'いいえ'
+    ja: 'いいえ',
+    tr: 'Hayır'
   },
   'goodbye': {
     en: 'Goodbye',
@@ -150,7 +160,8 @@ const DICTIONARY = {
     zh: '再见',
     ar: 'مع السلامة',
     pt: 'Adeus',
-    ja: 'さようなら'
+    ja: 'さようなら',
+    tr: 'Hoşça kal'
   },
   'bye': {
     en: 'Bye',
@@ -162,7 +173,8 @@ const DICTIONARY = {
     zh: '再见',
     ar: 'مع السلامة',
     pt: 'Tchau',
-    ja: 'さようなら'
+    ja: 'さようなら',
+    tr: 'Görüşürüz'
   },
   'thank you': {
     en: 'Thank you',
@@ -174,7 +186,8 @@ const DICTIONARY = {
     zh: '谢谢',
     ar: 'شكراً',
     pt: 'Obrigado',
-    ja: 'ありがとう'
+    ja: 'ありがとう',
+    tr: 'Teşekkür ederim'
   },
   'thanks': {
     en: 'Thanks',
@@ -186,7 +199,8 @@ const DICTIONARY = {
     zh: '谢谢',
     ar: 'شكراً',
     pt: 'Obrigado',
-    ja: 'ありがとう'
+    ja: 'ありがとう',
+    tr: 'Teşekkürler'
   },
   'welcome': {
     en: 'Welcome',
@@ -198,7 +212,8 @@ const DICTIONARY = {
     zh: '欢迎',
     ar: 'أهلاً وسهلاً',
     pt: 'Bem-vindo',
-    ja: 'ようこそ'
+    ja: 'ようこそ',
+    tr: 'Hoş geldiniz'
   }
 };
 

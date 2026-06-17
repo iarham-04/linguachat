@@ -13,6 +13,7 @@ const SUPPORTED_LANGUAGES = {
   ar: { name: 'Arabic', flag: '🇸🇦', nativeName: 'العربية' },
   pt: { name: 'Portuguese', flag: '🇧🇷', nativeName: 'Português' },
   ja: { name: 'Japanese', flag: '🇯🇵', nativeName: '日本語' },
+  tr: { name: 'Turkish', flag: '🇹🇷', nativeName: 'Türkçe' },
 };
 
 function isValidLanguage(langCode) {

@@ -73,7 +73,7 @@ linguachat/
 │   │   │   ├── SocketContext.jsx   # Socket.io connection provider
 │   │   │   └── UserContext.jsx     # User state (sessionStorage backed)
 │   │   ├── utils/
-│   │   │   ├── languages.js        # 10 supported languages + flags
+│   │   │   ├── languages.js        # 11 supported languages + flags
 │   │   │   └── constants.js
 │   │   ├── App.jsx                 # State-based routing
 │   │   ├── index.css               # Tailwind + glassmorphism + animations
@@ -158,6 +158,7 @@ node test/e2e.js     # Run in another terminal
 | Arabic | `ar` | 🇸🇦 |
 | Portuguese | `pt` | 🇧🇷 |
 | Japanese | `ja` | 🇯🇵 |
+| Turkish | `tr` | 🇹🇷 |
 
 ## 🔌 Plugging in Real Translation
 
