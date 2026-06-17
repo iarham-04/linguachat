@@ -122,6 +122,11 @@
   --theme-bubble-other: #2e2e2e;
   --theme-border: rgba(46, 46, 46, 0.4);
   --theme-glow: rgba(76, 175, 136, 0.15);
+  --theme-bg-image: none;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #94a3b8;
+  --theme-bubble-own-text: #ffffff;
+  --theme-bubble-other-text: #e2e8f0;
 }
 
 .theme-amethyst {
@@ -136,6 +141,11 @@
   --theme-bubble-other: #241c30;
   --theme-border: rgba(58, 45, 80, 0.4);
   --theme-glow: rgba(167, 139, 250, 0.15);
+  --theme-bg-image: none;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #a78bfa;
+  --theme-bubble-own-text: #ffffff;
+  --theme-bubble-other-text: #e2e8f0;
 }
 
 .theme-breeze {
@@ -150,6 +160,11 @@
   --theme-bubble-other: #1e293b;
   --theme-border: rgba(30, 41, 59, 0.4);
   --theme-glow: rgba(6, 182, 212, 0.15);
+  --theme-bg-image: none;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #94a3b8;
+  --theme-bubble-own-text: #ffffff;
+  --theme-bubble-other-text: #e2e8f0;
 }
 
 .theme-sunset {
@@ -164,6 +179,11 @@
   --theme-bubble-other: #2d1414;
   --theme-border: rgba(60, 25, 25, 0.4);
   --theme-glow: rgba(249, 115, 22, 0.15);
+  --theme-bg-image: none;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #f97316;
+  --theme-bubble-own-text: #ffffff;
+  --theme-bubble-other-text: #e2e8f0;
 }
 
 .theme-moss {
@@ -178,26 +198,177 @@
   --theme-bubble-other: #151e15;
   --theme-border: rgba(25, 35, 25, 0.4);
   --theme-glow: rgba(132, 204, 22, 0.15);
+  --theme-bg-image: none;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #84cc16;
+  --theme-bubble-own-text: #ffffff;
+  --theme-bubble-other-text: #e2e8f0;
+}
+
+.theme-cats {
+  --theme-accent: #d97706;
+  --theme-accent-hover: #b45309;
+  --theme-accent-light: rgba(217, 119, 6, 0.15);
+  --theme-accent-border: rgba(217, 119, 6, 0.25);
+  --theme-outer-bg: #fef3c7;
+  --theme-panel-bg: rgba(253, 246, 227, 0.85);
+  --theme-sidebar-bg: rgba(245, 237, 219, 0.9);
+  --theme-bubble-own: rgba(217, 119, 6, 0.15);
+  --theme-bubble-other: rgba(255, 255, 255, 0.7);
+  --theme-border: rgba(120, 113, 108, 0.2);
+  --theme-glow: rgba(217, 119, 6, 0.15);
+  --theme-bg-image: url('/themes/sunlit_cats.png');
+  --theme-text-primary: #292524;
+  --theme-text-secondary: #57534e;
+  --theme-bubble-own-text: #9a3412;
+  --theme-bubble-other-text: #1c1917;
+}
+
+.theme-ripples {
+  --theme-accent: #059669;
+  --theme-accent-hover: #047857;
+  --theme-accent-light: rgba(5, 150, 105, 0.15);
+  --theme-accent-border: rgba(5, 150, 105, 0.25);
+  --theme-outer-bg: #d1fae5;
+  --theme-panel-bg: rgba(240, 253, 244, 0.85);
+  --theme-sidebar-bg: rgba(220, 252, 231, 0.9);
+  --theme-bubble-own: rgba(5, 150, 105, 0.15);
+  --theme-bubble-other: rgba(255, 255, 255, 0.7);
+  --theme-border: rgba(4, 120, 87, 0.2);
+  --theme-glow: rgba(5, 150, 105, 0.15);
+  --theme-bg-image: url('/themes/garden_ripples.png');
+  --theme-text-primary: #064e3b;
+  --theme-text-secondary: #0f766e;
+  --theme-bubble-own-text: #065f46;
+  --theme-bubble-other-text: #0f172a;
+}
+
+.theme-tulips {
+  --theme-accent: #ec4899;
+  --theme-accent-hover: #db2777;
+  --theme-accent-light: rgba(236, 72, 153, 0.15);
+  --theme-accent-border: rgba(236, 72, 153, 0.25);
+  --theme-outer-bg: #0d0714;
+  --theme-panel-bg: rgba(22, 12, 33, 0.82);
+  --theme-sidebar-bg: rgba(15, 8, 23, 0.88);
+  --theme-bubble-own: rgba(236, 72, 153, 0.2);
+  --theme-bubble-other: rgba(255, 255, 255, 0.08);
+  --theme-border: rgba(236, 72, 153, 0.2);
+  --theme-glow: rgba(236, 72, 153, 0.15);
+  --theme-bg-image: url('/themes/starry_tulips.png');
+  --theme-text-primary: #fdf2f8;
+  --theme-text-secondary: #f472b6;
+  --theme-bubble-own-text: #fdf2f8;
+  --theme-bubble-other-text: #fbcfe8;
+}
+
+.theme-watercolor {
+  --theme-accent: #0284c7;
+  --theme-accent-hover: #0369a1;
+  --theme-accent-light: rgba(2, 132, 199, 0.12);
+  --theme-accent-border: rgba(2, 132, 199, 0.22);
+  --theme-outer-bg: #f0f9ff;
+  --theme-panel-bg: rgba(255, 255, 255, 0.82);
+  --theme-sidebar-bg: rgba(240, 249, 255, 0.9);
+  --theme-bubble-own: rgba(2, 132, 199, 0.12);
+  --theme-bubble-other: rgba(241, 245, 249, 0.8);
+  --theme-border: rgba(203, 213, 225, 0.5);
+  --theme-glow: rgba(2, 132, 199, 0.12);
+  --theme-bg-image: url('/themes/watercolor_leaves.png');
+  --theme-text-primary: #0f172a;
+  --theme-text-secondary: #475569;
+  --theme-bubble-own-text: #0369a1;
+  --theme-bubble-other-text: #1e293b;
+}
+
+.theme-constellations {
+  --theme-accent: #6366f1;
+  --theme-accent-hover: #4f46e5;
+  --theme-accent-light: rgba(99, 102, 241, 0.18);
+  --theme-accent-border: rgba(99, 102, 241, 0.28);
+  --theme-outer-bg: #05050a;
+  --theme-panel-bg: rgba(10, 10, 20, 0.85);
+  --theme-sidebar-bg: rgba(5, 5, 12, 0.9);
+  --theme-bubble-own: rgba(99, 102, 241, 0.25);
+  --theme-bubble-other: rgba(255, 255, 255, 0.07);
+  --theme-border: rgba(99, 102, 241, 0.2);
+  --theme-glow: rgba(99, 102, 241, 0.15);
+  --theme-bg-image: url('/themes/starry_constellations.png');
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #94a3b8;
+  --theme-bubble-own-text: #e0e7ff;
+  --theme-bubble-other-text: #cbd5e1;
+}
+
+.theme-blobs {
+  --theme-accent: #8b5cf6;
+  --theme-accent-hover: #7c3aed;
+  --theme-accent-light: rgba(139, 92, 246, 0.12);
+  --theme-accent-border: rgba(139, 92, 246, 0.22);
+  --theme-outer-bg: #f5f3ff;
+  --theme-panel-bg: rgba(255, 255, 255, 0.85);
+  --theme-sidebar-bg: rgba(245, 243, 255, 0.9);
+  --theme-bubble-own: rgba(139, 92, 246, 0.12);
+  --theme-bubble-other: rgba(241, 245, 249, 0.8);
+  --theme-border: rgba(139, 92, 246, 0.15);
+  --theme-glow: rgba(139, 92, 246, 0.12);
+  --theme-bg-image: url('/themes/purple_blobs.png');
+  --theme-text-primary: #1e1b4b;
+  --theme-text-secondary: #6d28d9;
+  --theme-bubble-own-text: #5b21b6;
+  --theme-bubble-other-text: #1e293b;
+}
+
+.theme-gradient {
+  --theme-accent: #38bdf8;
+  --theme-accent-hover: #0ea5e9;
+  --theme-accent-light: rgba(56, 189, 248, 0.18);
+  --theme-accent-border: rgba(56, 189, 248, 0.28);
+  --theme-outer-bg: #0f172a;
+  --theme-panel-bg: rgba(15, 23, 42, 0.85);
+  --theme-sidebar-bg: rgba(10, 15, 30, 0.9);
+  --theme-bubble-own: rgba(56, 189, 248, 0.2);
+  --theme-bubble-other: rgba(255, 255, 255, 0.07);
+  --theme-border: rgba(56, 189, 248, 0.15);
+  --theme-glow: rgba(56, 189, 248, 0.15);
+  --theme-bg-image: url('/themes/dusty_gradient.png');
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #38bdf8;
+  --theme-bubble-own-text: #f0f9ff;
+  --theme-bubble-other-text: #cbd5e1;
 }
 
 /* Theme Utilities */
 .bg-theme-outer {
   background-color: var(--theme-outer-bg);
+  background-image: var(--theme-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background 0.3s ease, background-color 0.3s ease;
 }
 .bg-theme-panel {
   background-color: var(--theme-panel-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: background-color 0.3s ease;
 }
 .bg-theme-sidebar {
   background-color: var(--theme-sidebar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: background-color 0.3s ease;
 }
 .bg-theme-accent {
   background-color: var(--theme-accent);
+  transition: background-color 0.2s ease;
 }
 .bg-theme-accent-hover:hover {
   background-color: var(--theme-accent-hover);
 }
 .bg-theme-accent-light {
   background-color: var(--theme-accent-light);
+  transition: background-color 0.2s ease;
 }
 .border-theme-accent-border {
   border-color: var(--theme-accent-border);
@@ -213,6 +384,7 @@
 }
 .border-theme-divider {
   border-color: var(--theme-border);
+  transition: border-color 0.3s ease;
 }
 .text-theme-accent {
   color: var(--theme-accent);
@@ -233,4 +405,19 @@
 .text-theme-accent-hover:hover {
   color: var(--theme-accent-hover);
 }
+
+/* Dynamic theme typography styles */
+.text-theme-primary {
+  color: var(--theme-text-primary);
+  transition: color 0.3s ease;
+}
+.text-theme-secondary {
+  color: var(--theme-text-secondary);
+  transition: color 0.3s ease;
+}
+.placeholder-theme-secondary::placeholder {
+  color: var(--theme-text-secondary);
+  opacity: 0.5;
+}
+
 

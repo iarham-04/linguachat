@@ -225,14 +225,14 @@ export default function ChatRoom() {
               
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white leading-tight">To: Everyone</span>
+                  <span className="text-sm font-bold text-theme-primary leading-tight">To: Everyone</span>
                   <span className="text-gray-600 text-xs flex-shrink-0">·</span>
                   <span className="text-[11px] text-theme-accent bg-theme-accent-light px-2 py-0.5 rounded-full border border-theme-accent-border font-medium flex items-center gap-1 animate-fade-in flex-shrink-0">
                     <span className="leading-none">{getFlag(user.lang)}</span>
                     <span>{isEmojiAvatar ? parsedAvatar + ' ' : ''}{cleanName}</span>
                   </span>
                 </div>
-                <span className="text-[10px] text-gray-500 truncate max-w-[180px] sm:max-w-xs leading-normal">
+                <span className="text-[10px] text-theme-secondary truncate max-w-[180px] sm:max-w-xs leading-normal">
                   Room: {roomCode} • {participantsText}
                 </span>
               </div>
@@ -247,7 +247,7 @@ export default function ChatRoom() {
             {/* Date separator pill TODAY in center */}
             {messages.length > 0 && (
               <div className="flex justify-center my-3">
-                <span className="text-[10px] font-bold text-gray-500 bg-theme-sidebar border border-theme-divider px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-theme-secondary bg-theme-sidebar border border-theme-divider px-3 py-1 rounded-full uppercase tracking-wider">
                   Today
                 </span>
               </div>
@@ -259,8 +259,8 @@ export default function ChatRoom() {
                 <div className="w-16 h-16 rounded-2xl bg-theme-sidebar border border-theme-divider flex items-center justify-center mb-4 shadow-lg">
                   <span className="text-3xl">🌍</span>
                 </div>
-                <h3 className="text-base font-bold text-white mb-1">Room is ready!</h3>
-                <p className="text-gray-400 text-xs max-w-xs leading-relaxed">
+                <h3 className="text-base font-bold text-theme-primary mb-1">Room is ready!</h3>
+                <p className="text-theme-secondary text-xs max-w-xs leading-relaxed">
                   Share the room code <span className="font-mono text-[#f0c040] font-bold">{roomCode}</span> with
                   others to start chatting across languages.
                 </p>
@@ -272,7 +272,7 @@ export default function ChatRoom() {
               if (msg.type === 'system') {
                 return (
                   <div key={msg.id} className="flex justify-center animate-fade-in">
-                    <span className="text-[10px] text-gray-500 bg-theme-sidebar border border-theme-divider px-3.5 py-1 rounded-full tracking-wider font-semibold">
+                    <span className="text-[10px] text-theme-secondary bg-theme-sidebar border border-theme-divider px-3.5 py-1 rounded-full tracking-wider font-semibold">
                       {msg.text}
                     </span>
                   </div>
@@ -291,11 +291,11 @@ export default function ChatRoom() {
 
             {/* Translating indicator */}
             {translating && (
-              <div className="flex items-center gap-1.5 text-xs text-gray-500 pl-1.5 py-1 italic animate-pulse select-none">
+              <div className="flex items-center gap-1.5 text-xs text-theme-secondary pl-1.5 py-1 italic animate-pulse select-none">
                 <span className="flex gap-0.5">
-                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" />
-                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                  <span className="w-1.5 h-1.5 bg-theme-accent rounded-full animate-bounce" />
+                  <span className="w-1.5 h-1.5 bg-theme-accent rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-1.5 h-1.5 bg-theme-accent rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                 </span>
                 <span>{translating} is translating...</span>
               </div>

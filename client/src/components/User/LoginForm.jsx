@@ -38,12 +38,12 @@ export default function LoginForm() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-theme-sidebar mb-3 border border-theme-divider shadow-lg">
             <span className="text-3xl">🌐</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-3xl font-extrabold text-theme-primary tracking-tight">
             LinguaChat
           </h1>
           {/* Gold/Yellow Underline Accent */}
           <div className="w-10 h-[3px] bg-[#f0c040] rounded mt-2.5 mb-2.5" />
-          <p className="text-gray-400 text-xs mt-1">
+          <p className="text-theme-secondary text-xs mt-1">
             Chat in any language. Understand everyone.
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function LoginForm() {
         {/* Login Card */}
         <form onSubmit={handleSubmit} className="bg-theme-panel border border-theme-divider rounded-2xl p-6 sm:p-7 space-y-5 shadow-2xl">
           <div>
-            <label htmlFor="display-name" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            <label htmlFor="display-name" className="block text-xs font-semibold text-theme-secondary uppercase tracking-wider mb-2">
               Display Name
             </label>
             <input
@@ -62,14 +62,14 @@ export default function LoginForm() {
               placeholder="Enter your name..."
               maxLength={20}
               className="w-full px-4 py-3 rounded-xl bg-theme-sidebar border border-theme-divider 
-                         text-white text-base placeholder-gray-600 focus:outline-none focus:ring-1 
+                         text-theme-primary text-base placeholder-theme-secondary focus:outline-none focus:ring-1 
                          focus:ring-theme-accent focus:border-theme-accent transition-all duration-200"
               autoFocus
             />
           </div>
 
           <div>
-            <span className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            <span className="block text-xs font-semibold text-theme-secondary uppercase tracking-wider mb-2">
               Choose Animal Avatar (Optional)
             </span>
             <div className="grid grid-cols-5 gap-2">
@@ -95,7 +95,7 @@ export default function LoginForm() {
           </div>
 
           <div>
-            <label htmlFor="language-select" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            <label htmlFor="language-select" className="block text-xs font-semibold text-theme-secondary uppercase tracking-wider mb-2">
               Your Language
             </label>
             <select
@@ -103,7 +103,7 @@ export default function LoginForm() {
               value={lang}
               onChange={(e) => setLang(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-theme-sidebar border border-theme-divider 
-                         text-white text-base focus:outline-none focus:ring-1 focus:ring-theme-accent 
+                         text-theme-primary text-base focus:outline-none focus:ring-1 focus:ring-theme-accent 
                          focus:border-theme-accent transition-all duration-200 appearance-none
                          cursor-pointer"
               style={{
@@ -114,7 +114,7 @@ export default function LoginForm() {
               }}
             >
               {LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code} className="bg-theme-panel text-white">
+                <option key={l.code} value={l.code} className="bg-theme-sidebar text-theme-primary">
                   {l.flag} {l.name} ({l.nativeName})
                 </option>
               ))}
@@ -138,7 +138,7 @@ export default function LoginForm() {
           </button>
         </form>
 
-        <p className="text-center text-gray-600 text-[11px] mt-6">
+        <p className="text-center text-theme-secondary text-[11px] mt-6">
           No account needed. Just pick a name and start chatting.
         </p>
       </div>

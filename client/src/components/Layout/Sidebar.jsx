@@ -24,18 +24,18 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
       {/* Sidebar header */}
       <div className="p-4 flex flex-col relative">
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2 text-white">
+          <div className="flex items-center gap-2 text-theme-primary">
             {/* Chat/Message Icon */}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5.5 h-5.5 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5.5 h-5.5 text-theme-primary">
               <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0 1 12 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.908 48.908 0 0 1-5.152.455c-.244.014-.49.025-.736.033l-4.08 4.078a.75.75 0 0 1-1.28-.53v-3.71c-1.748-.066-3.418-.286-4.954-.645C2.106 15.996 1 14.394 1 12.5V8.568c0-1.945 1.106-3.547 2.848-3.827l.004-.001ZM18.75 9a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0V9ZM12.75 9a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 1.5 0V9ZM7.5 9.75a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H8.25a.75.75 0 0 1-.75-.75V9.75Z" clipRule="evenodd" />
             </svg>
-            <h3 className="font-bold text-white text-base tracking-tight">LinguaChat</h3>
+            <h3 className="font-bold text-theme-primary text-base tracking-tight">LinguaChat</h3>
           </div>
           <div className="flex items-center gap-1.5">
             {/* Settings/Hamburger Toggle button */}
             <button
               onClick={() => setSettingsOpen(!settingsOpen)}
-              className="p-1.5 rounded-lg hover:bg-theme-panel text-gray-400 hover:text-white transition-all active:scale-95"
+              className="p-1.5 rounded-lg hover:bg-theme-panel text-theme-secondary hover:text-theme-primary transition-all active:scale-95"
               title="Settings"
               id="sidebar-settings-btn"
             >
@@ -46,7 +46,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
             {onClose && (
               <button
                 onClick={onClose}
-                className="md:hidden p-1.5 rounded-lg hover:bg-theme-panel text-gray-400 hover:text-white transition-all"
+                className="md:hidden p-1.5 rounded-lg hover:bg-theme-panel text-theme-secondary hover:text-theme-primary transition-all"
                 title="Close"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -65,18 +65,18 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
           <div className="absolute right-4 top-14 w-60 bg-theme-panel border border-theme-divider rounded-xl p-4 shadow-2xl z-30 space-y-3.5 animate-slide-up">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Settings</span>
-                <button onClick={() => setSettingsOpen(false)} className="text-gray-500 hover:text-white text-xs">✕</button>
+                <span className="text-[10px] font-bold text-theme-secondary uppercase tracking-wider">Settings</span>
+                <button onClick={() => setSettingsOpen(false)} className="text-theme-secondary hover:text-theme-primary text-xs bg-transparent border-0 cursor-pointer">✕</button>
               </div>
               
               <div className="flex items-center gap-1.5 bg-theme-sidebar p-2 rounded-lg border border-theme-divider mb-3">
-                <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider flex-1">Room Code:</span>
+                <span className="text-[10px] text-theme-secondary font-semibold uppercase tracking-wider flex-1">Room Code:</span>
                 <code className="text-xs font-mono text-[#f0c040] tracking-wider">{roomCode}</code>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(roomCode);
                   }}
-                  className="p-1 rounded bg-theme-panel hover:bg-theme-bubble-own text-gray-400 hover:text-white text-[10px]"
+                  className="p-1 rounded bg-theme-panel hover:bg-theme-bubble-own text-theme-secondary hover:text-theme-primary text-[10px]"
                   title="Copy room code"
                 >
                   📋
@@ -86,7 +86,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
 
             {user && (
               <div className="space-y-1.5">
-                <label htmlFor="sidebar-language-select" className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <label htmlFor="sidebar-language-select" className="block text-[10px] font-bold text-theme-secondary uppercase tracking-wider">
                   Translation Language
                 </label>
                 <div className="relative">
@@ -95,7 +95,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
                     value={user.lang}
                     onChange={handleLangChange}
                     className="w-full px-3 py-2 rounded-lg bg-theme-sidebar border border-theme-divider 
-                               text-white text-xs focus:outline-none focus:ring-1 focus:ring-theme-accent 
+                               text-theme-primary text-xs focus:outline-none focus:ring-1 focus:ring-theme-accent 
                                transition-all duration-200 appearance-none cursor-pointer"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
@@ -105,7 +105,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
                     }}
                   >
                     {LANGUAGES.map((lang) => (
-                      <option key={lang.code} value={lang.code} className="bg-theme-sidebar text-white">
+                      <option key={lang.code} value={lang.code} className="bg-theme-sidebar text-theme-primary">
                         {lang.flag} {lang.name}
                       </option>
                     ))}
@@ -116,7 +116,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
 
             {/* Theme Selector */}
             <div className="space-y-1.5">
-              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <span className="block text-[10px] font-bold text-theme-secondary uppercase tracking-wider">
                 Chat Theme
               </span>
               <div className="flex gap-2 justify-between items-center bg-theme-sidebar p-2 rounded-lg border border-theme-divider">
@@ -159,14 +159,14 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
       </div>
 
       {/* Section label: RECENT CHATS with badge & dropdown arrow */}
-      <div className="px-4 py-2 flex items-center justify-between text-gray-400">
+      <div className="px-4 py-2 flex items-center justify-between text-theme-secondary">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">RECENT CHATS</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-theme-secondary">RECENT CHATS</span>
           <span className="text-[10px] font-semibold text-theme-accent bg-theme-accent-light px-1.5 py-0.5 rounded-full border border-theme-accent-border">
             {users.length}
           </span>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5 text-gray-500">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5 text-theme-secondary">
           <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
         </svg>
       </div>
@@ -215,13 +215,13 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
               {/* Name + Details */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between mb-0.5">
-                  <p className="text-sm font-bold text-white group-hover:text-white truncate">
-                    {cleanName} {isSelf && <span className="text-[10px] text-gray-500 font-semibold">(You)</span>}
+                  <p className="text-sm font-bold text-theme-primary group-hover:text-theme-primary truncate">
+                    {cleanName} {isSelf && <span className="text-[10px] text-theme-secondary font-semibold">(You)</span>}
                   </p>
-                  <span className="text-[10px] text-gray-500">12:45 PM</span>
+                  <span className="text-[10px] text-theme-secondary">12:45 PM</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-400 truncate pr-2">
+                  <p className="text-xs text-theme-secondary truncate pr-2">
                     Active in {getLanguageName(roomUser.lang)} [{roomUser.lang.toUpperCase()}]
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
       <div className="py-3 flex justify-center border-t border-theme-divider">
         <button
           onClick={() => setSettingsOpen(!settingsOpen)}
-          className="text-gray-600 hover:text-white transition-colors tracking-[0.2em] font-extrabold text-sm"
+          className="text-theme-secondary hover:text-theme-primary transition-colors tracking-[0.2em] font-extrabold text-sm bg-transparent border-0 cursor-pointer"
           title="More options"
         >
           •••

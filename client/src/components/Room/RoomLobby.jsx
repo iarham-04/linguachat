@@ -68,12 +68,12 @@ export default function RoomLobby() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-theme-sidebar mb-3 border border-theme-divider shadow-lg">
             <span className="text-3xl">💬</span>
           </div>
-          <h2 className="text-2xl font-bold text-white">
-            Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 font-extrabold">{user?.name}</span>
+          <h2 className="text-2xl font-bold text-theme-primary">
+            Welcome, <span className="font-extrabold">{user?.name}</span>
           </h2>
           {/* Gold/Yellow Underline Accent */}
           <div className="w-10 h-[3px] bg-[#f0c040] rounded mt-2.5 mb-2.5" />
-          <p className="text-gray-400 text-xs mt-1">Create a new room or join an existing one</p>
+          <p className="text-theme-secondary text-xs mt-1">Create a new room or join an existing one</p>
         </div>
 
         {/* Mode Selection */}
@@ -92,8 +92,8 @@ export default function RoomLobby() {
                   ✨
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-white">Create Room</h3>
-                  <p className="text-xs text-gray-400">Start a new multilingual chat room</p>
+                  <h3 className="text-base font-semibold text-theme-primary">Create Room</h3>
+                  <p className="text-xs text-theme-secondary">Start a new multilingual chat room</p>
                 </div>
               </div>
             </button>
@@ -111,8 +111,8 @@ export default function RoomLobby() {
                   🔗
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-white">Join Room</h3>
-                  <p className="text-xs text-gray-400">Enter a room code to join</p>
+                  <h3 className="text-base font-semibold text-theme-primary">Join Room</h3>
+                  <p className="text-xs text-theme-secondary">Enter a room code to join</p>
                 </div>
               </div>
             </button>
@@ -123,7 +123,7 @@ export default function RoomLobby() {
         {mode === 'join' && (
           <form onSubmit={handleJoinRoom} className="bg-theme-panel border border-theme-divider rounded-2xl p-6 sm:p-7 space-y-5 animate-fade-in shadow-2xl">
             <div>
-              <label htmlFor="room-code-input" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 text-center">
+              <label htmlFor="room-code-input" className="block text-xs font-semibold text-theme-secondary uppercase tracking-wider mb-2 text-center">
                 Room Code
               </label>
               <input
@@ -134,7 +134,7 @@ export default function RoomLobby() {
                 placeholder="e.g. ABC123"
                 maxLength={6}
                 className="w-full px-4 py-4 rounded-xl bg-theme-sidebar border border-theme-divider 
-                           text-white text-center text-2xl font-mono tracking-[0.2em] placeholder-gray-700
+                           text-theme-primary text-center text-2xl font-mono tracking-[0.2em] placeholder-theme-secondary
                            focus:outline-none focus:ring-1 focus:ring-theme-accent focus:border-theme-accent 
                            transition-all duration-200 uppercase"
                 autoFocus
@@ -149,8 +149,8 @@ export default function RoomLobby() {
               <button
                 type="button"
                 onClick={() => { setMode(null); setError(''); setRoomInput(''); }}
-                className="flex-1 py-3 px-4 rounded-xl font-medium text-gray-400 
-                           bg-theme-sidebar border border-theme-divider hover:bg-theme-panel hover:text-white
+                className="flex-1 py-3 px-4 rounded-xl font-medium text-theme-secondary 
+                           bg-theme-sidebar border border-theme-divider hover:bg-theme-panel hover:text-theme-primary
                            transition-all duration-200 text-sm"
               >
                 Back
@@ -178,7 +178,7 @@ export default function RoomLobby() {
               <span className="w-2.5 h-2.5 bg-[#f0c040] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
               <span className="w-2.5 h-2.5 bg-theme-accent rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
             </div>
-            <p className="text-gray-400 text-sm">Creating your room...</p>
+            <p className="text-theme-secondary text-sm">Creating your room...</p>
           </div>
         )}
 
@@ -188,8 +188,8 @@ export default function RoomLobby() {
             <p className="text-red-400 text-sm text-center">{error}</p>
             <button
               onClick={() => { setMode(null); setError(''); }}
-              className="w-full py-3 px-4 rounded-xl font-medium text-gray-400 
-                         bg-theme-sidebar border border-theme-divider hover:bg-theme-panel hover:text-white
+              className="w-full py-3 px-4 rounded-xl font-medium text-theme-secondary 
+                         bg-theme-sidebar border border-theme-divider hover:bg-theme-panel hover:text-theme-primary
                          transition-all duration-200 text-sm"
             >
               Back

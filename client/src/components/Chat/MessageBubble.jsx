@@ -56,9 +56,9 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
         
         {/* Sender Info for Received messages */}
         {!isOwn && (
-          <span className="text-[10px] text-gray-500 font-semibold mb-1 ml-1 flex items-center gap-1.5 select-none">
+          <span className="text-[10px] text-theme-secondary font-semibold mb-1 ml-1 flex items-center gap-1.5 select-none">
             <span>{cleanName}</span>
-            <span className="text-[9px] text-gray-600 font-mono">[{message.senderLang.toUpperCase()}]</span>
+            <span className="text-[9px] text-theme-secondary font-mono">[{message.senderLang.toUpperCase()}]</span>
             <span className="text-xs leading-none">{flag}</span>
           </span>
         )}
@@ -67,8 +67,8 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
         <div
           className={`rounded-2xl px-4 py-2 shadow-sm ${
             isOwn
-              ? 'bg-theme-bubble-own text-white rounded-tr-sm'
-              : 'bg-theme-bubble-other text-gray-200 rounded-tl-sm border border-theme-divider'
+              ? 'bg-theme-bubble-own text-[var(--theme-bubble-own-text)] rounded-tr-sm'
+              : 'bg-theme-bubble-other text-[var(--theme-bubble-other-text)] rounded-tl-sm border border-theme-divider'
           }`}
         >
           <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap">
@@ -80,7 +80,7 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
             <div className="mt-2 flex flex-col items-start border-t border-theme-divider pt-1.5">
               <button
                 onClick={() => setShowOriginal(!showOriginal)}
-                className="inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-white transition-colors"
+                className="inline-flex items-center gap-1 text-[10px] text-theme-secondary hover:text-theme-primary transition-colors"
                 title={showOriginal ? 'Hide original' : 'Show original text'}
               >
                 <span>🌐</span>
@@ -88,7 +88,7 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
               </button>
 
               {showOriginal && (
-                <p className="mt-1 text-xs text-gray-500 italic break-words whitespace-pre-wrap leading-relaxed">
+                <p className="mt-1 text-xs text-theme-secondary italic break-words whitespace-pre-wrap leading-relaxed">
                   {message.originalText}
                 </p>
               )}
@@ -97,9 +97,9 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
         </div>
 
         {/* Timestamp */}
-        <span className="text-[9px] text-gray-600 mt-1 select-none px-1 flex items-center gap-1.5">
+        <span className="text-[9px] text-theme-secondary mt-1 select-none px-1 flex items-center gap-1.5">
           <span>{time}</span>
-          {message.isEdited && <span className="text-gray-500 font-normal italic select-none">(edited)</span>}
+          {message.isEdited && <span className="text-theme-secondary font-normal italic select-none">(edited)</span>}
         </span>
       </div>
 
@@ -107,14 +107,14 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
         <div className="flex gap-1 opacity-60 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity self-center mr-1.5 flex-shrink-0 select-none">
           <button
             onClick={() => onEdit(message.id, message.originalText)}
-            className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-theme-bubble-own border border-theme-divider text-gray-400 hover:text-white text-[11px] cursor-pointer active:scale-90 transition-all"
+            className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-theme-bubble-own border border-theme-divider text-theme-secondary hover:text-theme-primary text-[11px] cursor-pointer active:scale-90 transition-all"
             title="Edit message"
           >
             ✏️
           </button>
           <button
             onClick={() => onUnsend(message.id)}
-            className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-red-950/20 border border-theme-divider text-gray-400 hover:text-red-400 text-[11px] cursor-pointer active:scale-90 transition-all"
+            className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-red-950/20 border border-theme-divider text-theme-secondary hover:text-red-400 text-[11px] cursor-pointer active:scale-90 transition-all"
             title="Unsend message"
           >
             🗑️

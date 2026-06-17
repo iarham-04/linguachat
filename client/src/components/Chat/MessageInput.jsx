@@ -68,7 +68,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
     <div className="w-full relative flex flex-col">
       {/* Editing message ribbon */}
       {editingMessage && (
-        <div className="px-4 py-2 bg-theme-sidebar border-t border-theme-divider flex justify-between items-center text-xs text-gray-400 select-none animate-slide-up">
+        <div className="px-4 py-2 bg-theme-sidebar border-t border-theme-divider flex justify-between items-center text-xs text-theme-secondary select-none animate-slide-up">
           <span className="truncate flex items-center gap-1.5">
             <span>✏️</span>
             <span>Editing message...</span>
@@ -76,7 +76,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
           <button
             type="button"
             onClick={onCancelEdit}
-            className="text-[#f0c040] hover:text-white font-semibold cursor-pointer bg-transparent border-0"
+            className="text-theme-accent hover:text-theme-primary font-semibold cursor-pointer bg-transparent border-0"
           >
             Cancel
           </button>
@@ -91,11 +91,11 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
             className="absolute left-2 right-2 bottom-16 sm:left-4 sm:right-auto sm:w-[260px] bg-theme-sidebar border border-theme-divider rounded-xl p-3 shadow-2xl z-30 space-y-2 animate-slide-up"
           >
             <div className="flex justify-between items-center px-1">
-              <span className="text-[10px] font-bold text-gray-500 bg-transparent uppercase tracking-wider">Quick Emojis</span>
+              <span className="text-[10px] font-bold text-theme-secondary bg-transparent uppercase tracking-wider">Quick Emojis</span>
               <button
                 type="button"
                 onClick={() => setShowPicker(false)}
-                className="text-gray-500 hover:text-white text-xs bg-transparent border-0 cursor-pointer"
+                className="text-theme-secondary hover:text-theme-primary text-xs bg-transparent border-0 cursor-pointer"
               >
                 ✕
               </button>
@@ -106,7 +106,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
                   key={emoji}
                   type="button"
                   onClick={() => handleEmojiClick(emoji)}
-                  className="h-8 rounded-lg flex items-center justify-center text-lg hover:bg-theme-panel active:scale-90 transition-all duration-100 bg-transparent border-0 cursor-pointer text-white"
+                  className="h-8 rounded-lg flex items-center justify-center text-lg hover:bg-theme-panel active:scale-90 transition-all duration-100 bg-transparent border-0 cursor-pointer text-theme-primary"
                 >
                   {emoji}
                 </button>
@@ -119,7 +119,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className="emoji-toggle-btn flex-shrink-0 w-10 h-10 rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-gray-400 hover:text-white flex items-center justify-center transition-colors active:scale-95 pb-0.5"
+          className="emoji-toggle-btn flex-shrink-0 w-10 h-10 rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-theme-secondary hover:text-theme-primary flex items-center justify-center transition-colors active:scale-95 pb-0.5"
           title="Add emoji"
         >
           <span className="text-2xl font-light leading-none">{showPicker ? '✕' : '+'}</span>
@@ -136,7 +136,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
             placeholder="Type something..."
             disabled={disabled}
             rows={1}
-            className="w-full px-2 py-1 bg-transparent text-white placeholder-gray-600 resize-none focus:outline-none text-base leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed scrollbar-hide"
+            className="w-full px-2 py-1 bg-transparent text-theme-primary placeholder-theme-secondary resize-none focus:outline-none text-base leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed scrollbar-hide"
             style={{ height: '32px', maxHeight: '100px' }}
             onInput={(e) => {
               e.target.style.height = 'auto';
