@@ -22,32 +22,33 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#121212] p-4">
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-600/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#4CAF88]/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#f0c040]/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md animate-slide-up relative z-10">
+      <div className="w-full max-w-sm animate-slide-up relative z-10">
         {/* Logo / Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-violet-600 mb-4 shadow-xl shadow-primary-500/25">
-            <span className="text-4xl">🌐</span>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1e1e1e] mb-3 border border-[#2e2e2e] shadow-lg">
+            <span className="text-3xl">🌐</span>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-400 via-violet-400 to-primary-300 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             LinguaChat
           </h1>
-          <p className="text-surface-400 mt-2 text-sm">
+          {/* Gold/Yellow Underline Accent */}
+          <div className="w-10 h-[3px] bg-[#f0c040] rounded mt-2.5 mb-2.5" />
+          <p className="text-gray-400 text-xs mt-1">
             Chat in any language. Understand everyone.
           </p>
         </div>
 
         {/* Login Card */}
-        <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-6 sm:p-7 space-y-5 shadow-2xl">
           <div>
-            <label htmlFor="display-name" className="block text-sm font-medium text-surface-300 mb-2">
+            <label htmlFor="display-name" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
               Display Name
             </label>
             <input
@@ -57,34 +58,34 @@ export default function LoginForm() {
               onChange={(e) => { setName(e.target.value); setError(''); }}
               placeholder="Enter your name..."
               maxLength={20}
-              className="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-surface-700/50 
-                         text-white placeholder-surface-500 focus:outline-none focus:ring-2 
-                         focus:ring-primary-500/50 focus:border-primary-500/50 transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl bg-[#252525] border border-[#333] 
+                         text-white text-base placeholder-gray-600 focus:outline-none focus:ring-1 
+                         focus:ring-[#4CAF88] focus:border-[#4CAF88] transition-all duration-200"
               autoFocus
             />
           </div>
 
           <div>
-            <label htmlFor="language-select" className="block text-sm font-medium text-surface-300 mb-2">
+            <label htmlFor="language-select" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
               Your Language
             </label>
             <select
               id="language-select"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-surface-700/50 
-                         text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 
-                         focus:border-primary-500/50 transition-all duration-200 appearance-none
+              className="w-full px-4 py-3 rounded-xl bg-[#252525] border border-[#333] 
+                         text-white text-base focus:outline-none focus:ring-1 focus:ring-[#4CAF88] 
+                         focus:border-[#4CAF88] transition-all duration-200 appearance-none
                          cursor-pointer"
               style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 12px center',
-                backgroundSize: '20px',
+                backgroundSize: '18px',
               }}
             >
               {LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>
+                <option key={l.code} value={l.code} className="bg-[#1a1a1a] text-white">
                   {l.flag} {l.name} ({l.nativeName})
                 </option>
               ))}
@@ -92,24 +93,23 @@ export default function LoginForm() {
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm animate-fade-in">{error}</p>
+            <p className="text-red-400 text-xs animate-fade-in">{error}</p>
           )}
 
           <button
             id="login-button"
             type="submit"
             className="w-full py-3 px-4 rounded-xl font-semibold text-white
-                       bg-gradient-to-r from-primary-600 to-violet-600 
-                       hover:from-primary-500 hover:to-violet-500
-                       focus:outline-none focus:ring-2 focus:ring-primary-500/50
-                       transform hover:scale-[1.02] active:scale-[0.98]
-                       transition-all duration-200 shadow-lg shadow-primary-500/25"
+                       bg-[#4CAF88] hover:bg-[#439e7a]
+                       focus:outline-none focus:ring-2 focus:ring-[#4CAF88]/50
+                       active:scale-[0.98]
+                       transition-all duration-200 shadow-lg shadow-[#4CAF88]/10"
           >
             Continue
           </button>
         </form>
 
-        <p className="text-center text-surface-600 text-xs mt-6">
+        <p className="text-center text-gray-600 text-[11px] mt-6">
           No account needed. Just pick a name and start chatting.
         </p>
       </div>

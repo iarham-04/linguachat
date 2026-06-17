@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSocket } from '../../contexts/SocketContext';
 import { useUser } from '../../contexts/UserContext';
-import Header from '../Layout/Header';
 import Sidebar from '../Layout/Sidebar';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
-import TranslatingIndicator from './TranslatingIndicator';
 import { encryptMessage, decryptMessage } from '../../utils/crypto';
 
 export default function ChatRoom() {
@@ -14,7 +12,7 @@ export default function ChatRoom() {
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [translating, setTranslating] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState('chat'); // 'sidebar' | 'chat'
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -103,7 +101,7 @@ export default function ChatRoom() {
       socket.off('translating', handleTranslating);
       socket.off('error', handleError);
     };
-  }, [socket]);
+  }, [socket, roomCode]);
 
   const handleSendMessage = (text) => {
     if (!socket || !roomCode) return;
@@ -120,57 +118,81 @@ export default function ChatRoom() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-surface-950">
-      {/* Header */}
-      <Header roomCode={roomCode} userCount={users.length} />
-
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Sidebar — desktop */}
-        <div className="hidden md:block w-64 flex-shrink-0">
-          <Sidebar users={users} roomCode={roomCode} onLeave={handleLeave} />
+    <div className="h-screen w-screen flex items-center justify-center bg-[#121212] p-0 md:p-6 overflow-hidden">
+      {/* Outer Floating Container */}
+      <div className="w-full h-full max-w-6xl md:h-[90vh] bg-[#252525] rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.65)] border border-[#2e2e2e]/30 flex overflow-hidden relative">
+        
+        {/* Left Sidebar Panel */}
+        <div className={`${
+          activePanel === 'sidebar' ? 'flex w-full' : 'hidden'
+        } md:flex md:w-[280px] flex-shrink-0 border-r border-[#2e2e2e]/40`}>
+          <Sidebar 
+            users={users} 
+            roomCode={roomCode} 
+            onLeave={handleLeave} 
+            onClose={() => setActivePanel('chat')} 
+          />
         </div>
 
-        {/* Mobile sidebar overlay */}
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-            <div className="absolute left-0 top-0 bottom-0 w-72 animate-slide-in-left">
-              <Sidebar users={users} roomCode={roomCode} onLeave={handleLeave} />
+        {/* Right Chat Panel */}
+        <div className={`${
+          activePanel === 'chat' ? 'flex' : 'hidden'
+        } md:flex flex-1 flex-col min-w-0 bg-[#252525]`}>
+          
+          {/* Top Bar */}
+          <div className="h-14 px-4 flex items-center justify-between border-b border-[#2e2e2e]/40 bg-[#252525] select-none">
+            <div className="flex items-center gap-3">
+              {/* Back Button (Mobile only) */}
+              <button
+                onClick={() => setActivePanel('sidebar')}
+                className="md:hidden p-1.5 rounded-lg hover:bg-[#1e1e1e] text-gray-400 hover:text-white transition-colors"
+                title="Back to sidebar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+              </button>
+              
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white leading-tight">To: Everyone</span>
+                <span className="text-[10px] text-gray-500 font-mono tracking-wider">Room: {roomCode}</span>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile top bar with sidebar toggle */}
-          <div className="md:hidden flex items-center gap-2 px-4 py-2 bg-surface-900/60 border-b border-surface-800/50">
+            {/* Video Call Icon Button */}
             <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-1.5 rounded-lg hover:bg-surface-800 text-surface-400 transition-colors"
+              className="p-2 rounded-lg hover:bg-[#1e1e1e] text-gray-400 hover:text-white transition-colors active:scale-95"
+              title="Start video call (simulation)"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
               </svg>
             </button>
-            <span className="text-xs text-surface-500">{users.length} online</span>
-            <code className="ml-auto text-xs text-primary-400 font-mono">{roomCode}</code>
           </div>
 
-          {/* Messages */}
+          {/* Chat Messages Area */}
           <div
             ref={chatContainerRef}
-            className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scroll-smooth"
+            className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scroll-smooth bg-[#252525]"
           >
+            {/* Date separator pill TODAY in center */}
+            {messages.length > 0 && (
+              <div className="flex justify-center my-3">
+                <span className="text-[10px] font-bold text-gray-500 bg-[#1e1e1e] border border-[#2e2e2e]/80 px-3 py-1 rounded-full uppercase tracking-wider">
+                  Today
+                </span>
+              </div>
+            )}
+
             {/* Welcome message */}
             {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-fade-in">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500/20 to-violet-500/20 
-                                flex items-center justify-center mb-4 border border-surface-700/30">
-                  <span className="text-4xl">🌍</span>
+              <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-fade-in select-none">
+                <div className="w-16 h-16 rounded-2xl bg-[#1e1e1e] border border-[#333] flex items-center justify-center mb-4 shadow-lg">
+                  <span className="text-3xl">🌍</span>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">Room is ready!</h3>
-                <p className="text-surface-400 text-sm max-w-xs">
-                  Share the room code <span className="font-mono text-primary-400">{roomCode}</span> with
+                <h3 className="text-base font-bold text-white mb-1">Room is ready!</h3>
+                <p className="text-gray-400 text-xs max-w-xs leading-relaxed">
+                  Share the room code <span className="font-mono text-[#f0c040] font-bold">{roomCode}</span> with
                   others to start chatting across languages.
                 </p>
               </div>
@@ -181,8 +203,7 @@ export default function ChatRoom() {
               if (msg.type === 'system') {
                 return (
                   <div key={msg.id} className="flex justify-center animate-fade-in">
-                    <span className="text-xs text-surface-500 bg-surface-800/60 px-3 py-1 rounded-full
-                                     border border-surface-700/30">
+                    <span className="text-[10px] text-gray-500 bg-[#1e1e1e] border border-[#2e2e2e]/60 px-3.5 py-1 rounded-full tracking-wider font-semibold">
                       {msg.text}
                     </span>
                   </div>
@@ -192,12 +213,22 @@ export default function ChatRoom() {
                 <MessageBubble
                   key={msg.id}
                   message={msg}
+                  currentUserId={socket?.id}
                 />
               );
             })}
 
             {/* Translating indicator */}
-            <TranslatingIndicator senderName={translating} />
+            {translating && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 pl-1.5 py-1 italic animate-pulse select-none">
+                <span className="flex gap-0.5">
+                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" />
+                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                </span>
+                <span>{translating} is translating...</span>
+              </div>
+            )}
 
             {/* Scroll anchor */}
             <div ref={messagesEndRef} />

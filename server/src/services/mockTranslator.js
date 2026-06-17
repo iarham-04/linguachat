@@ -52,6 +52,7 @@ async function translate(text, sourceLang, targetLang) {
     },
     'how are you?': {
       es: '[Spanish] How are you?',
+      fr: '[French] How are you?',
     }
   };
 

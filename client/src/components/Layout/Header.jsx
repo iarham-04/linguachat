@@ -2,7 +2,7 @@ import { useSocket } from '../../contexts/SocketContext';
 import { getFlag } from '../../utils/languages';
 import { useUser } from '../../contexts/UserContext';
 
-export default function Header({ roomCode, userCount }) {
+export default function Header({ roomCode, userCount, onToggleSidebar }) {
   const { isConnected } = useSocket();
   const { user } = useUser();
 
@@ -10,6 +10,19 @@ export default function Header({ roomCode, userCount }) {
     <header className="flex items-center justify-between px-4 py-3 bg-surface-900/95 
                         border-b border-surface-800/80 backdrop-blur-xl">
       <div className="flex items-center gap-3">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="md:hidden p-1.5 rounded-lg bg-surface-800/80 hover:bg-surface-700 text-surface-300 hover:text-white transition-all border border-surface-700/30 active:scale-95"
+            title="Open room info"
+            id="toggle-sidebar-btn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+        )}
+
         {/* Logo */}
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600 
                         flex items-center justify-center shadow-lg shadow-primary-500/20">

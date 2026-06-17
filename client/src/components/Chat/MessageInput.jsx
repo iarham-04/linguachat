@@ -9,7 +9,12 @@ export default function MessageInput({ onSend, disabled }) {
     if (!text.trim() || disabled) return;
     onSend(text.trim());
     setText('');
-    inputRef.current?.focus();
+    
+    // Ensure height resets on submit
+    if (inputRef.current) {
+      inputRef.current.style.height = '32px';
+      inputRef.current.focus();
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -20,44 +25,44 @@ export default function MessageInput({ onSend, disabled }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-2 p-4 bg-surface-900/90 border-t border-surface-800/80 backdrop-blur-xl">
-      <div className="flex-1 relative">
+    <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 bg-[#252525] border-t border-[#2e2e2e]/40 select-none">
+      {/* "+" button on the left */}
+      <button
+        type="button"
+        className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#1a1a1a] border border-[#2e2e2e]/40 hover:bg-[#1e1e1e] text-gray-400 hover:text-white flex items-center justify-center transition-colors active:scale-95 pb-0.5"
+        title="Add attachment"
+      >
+        <span className="text-2xl font-light leading-none">+</span>
+      </button>
+
+      {/* Input container */}
+      <div className="flex-1 bg-[#1a1a1a] border border-[#2e2e2e]/40 rounded-xl px-2 py-1.5 flex items-center focus-within:border-[#333] transition-colors">
         <textarea
           id="message-input"
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
+          placeholder="Type something..."
           disabled={disabled}
           rows={1}
-          className="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-surface-700/40 
-                     text-white placeholder-surface-500 resize-none
-                     focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40
-                     transition-all duration-200 text-[15px] leading-relaxed
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ maxHeight: '120px' }}
+          className="w-full px-2 py-1 bg-transparent text-white placeholder-gray-600 resize-none focus:outline-none text-base leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed scrollbar-hide"
+          style={{ height: '32px', maxHeight: '100px' }}
           onInput={(e) => {
             e.target.style.height = 'auto';
-            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
           }}
         />
       </div>
+
+      {/* "Send" button on the far right */}
       <button
         id="send-button"
         type="submit"
         disabled={!text.trim() || disabled}
-        className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary-600 to-violet-600 
-                   text-white flex items-center justify-center
-                   hover:from-primary-500 hover:to-violet-500
-                   disabled:opacity-40 disabled:cursor-not-allowed
-                   transform hover:scale-105 active:scale-95
-                   transition-all duration-200 shadow-lg shadow-primary-500/20"
-        title="Send message"
+        className="flex-shrink-0 px-4 h-10 rounded-xl text-white hover:text-white hover:bg-[#1e1e1e] font-semibold text-sm transition-all active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-        </svg>
+        Send
       </button>
     </form>
   );
