@@ -169,13 +169,15 @@ function registerSocketHandlers(io, socket) {
         messages: room.messages.slice(-50), // Last 50 messages
       });
 
-      // Notify others in the room
-      socket.to(code).emit('user-joined', {
-        id: socket.id,
-        name: userName.trim(),
-        lang: userLang,
-        langInfo: getLanguageInfo(userLang),
-      });
+      // Notify others in the room (only if they are joining for the first time, not reconnecting)
+      if (socketsToRemove.length === 0) {
+        socket.to(code).emit('user-joined', {
+          id: socket.id,
+          name: userName.trim(),
+          lang: userLang,
+          langInfo: getLanguageInfo(userLang),
+        });
+      }
 
       // Broadcast updated user list
       io.to(code).emit('room-users', { users: getRoomUsers(code) });
@@ -462,27 +464,31 @@ function registerSocketHandlers(io, socket) {
 
     if (roomCode && rooms.has(roomCode)) {
       const room = rooms.get(roomCode);
-      room.users.delete(socket.id);
+      const isRegistered = room.users.has(socket.id);
 
-      console.log(`[Room] ${socket.userName} left room ${roomCode}`);
+      if (isRegistered) {
+        room.users.delete(socket.id);
 
-      // Notify others
-      socket.to(roomCode).emit('user-left', {
-        id: socket.id,
-        name: socket.userName,
-      });
+        console.log(`[Room] ${socket.userName} left room ${roomCode}`);
 
-      // Update user list
-      io.to(roomCode).emit('room-users', { users: getRoomUsers(roomCode) });
+        // Notify others
+        socket.to(roomCode).emit('user-left', {
+          id: socket.id,
+          name: socket.userName,
+        });
 
-      // Clean up empty rooms after a delay
-      if (room.users.size === 0) {
-        setTimeout(() => {
-          if (rooms.has(roomCode) && rooms.get(roomCode).users.size === 0) {
-            rooms.delete(roomCode);
-            console.log(`[Room] Deleted empty room ${roomCode}`);
-          }
-        }, 60000); // 1 minute grace period
+        // Update user list
+        io.to(roomCode).emit('room-users', { users: getRoomUsers(roomCode) });
+
+        // Clean up empty rooms after a delay
+        if (room.users.size === 0) {
+          setTimeout(() => {
+            if (rooms.has(roomCode) && rooms.get(roomCode).users.size === 0) {
+              rooms.delete(roomCode);
+              console.log(`[Room] Deleted empty room ${roomCode}`);
+            }
+          }, 60000); // 1 minute grace period
+        }
       }
     }
 
