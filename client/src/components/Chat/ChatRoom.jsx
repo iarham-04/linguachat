@@ -4,6 +4,7 @@ import { useUser } from '../../contexts/UserContext';
 import Sidebar from '../Layout/Sidebar';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
+import { getFlag } from '../../utils/languages';
 import { encryptMessage, decryptMessage } from '../../utils/crypto';
 
 export default function ChatRoom() {
@@ -154,7 +155,14 @@ export default function ChatRoom() {
               </button>
               
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-white leading-tight">To: Everyone</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-white leading-tight">To: Everyone</span>
+                  <span className="text-gray-600 text-xs">·</span>
+                  <span className="text-[11px] text-[#4CAF88] bg-[#4CAF88]/10 px-2 py-0.5 rounded-full border border-[#4CAF88]/20 font-medium flex items-center gap-1">
+                    <span className="leading-none">{getFlag(user.lang)}</span>
+                    <span>{user.name}</span>
+                  </span>
+                </div>
                 <span className="text-[10px] text-gray-500 font-mono tracking-wider">Room: {roomCode}</span>
               </div>
             </div>
