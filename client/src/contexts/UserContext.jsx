@@ -6,7 +6,15 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const stored = sessionStorage.getItem('linguachat_user');
-      return stored ? JSON.parse(stored) : null;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && !parsed.id) {
+          parsed.id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+          sessionStorage.setItem('linguachat_user', JSON.stringify(parsed));
+        }
+        return parsed;
+      }
+      return null;
     } catch (e) {
       return null;
     }
