@@ -225,6 +225,78 @@ async function runTests() {
       `Alice gets message translated to Spanish: "${aliceMessages[0].translatedText}"`);
   }
 
+  // ── Test 9: Message Editing ────────────────────────
+  console.log('\n📋 Test 9: Message Editing');
+
+  // Alice sends a new message to edit
+  let editMessageId = null;
+  const aliceEditPromise = new Promise(resolve => {
+    alice.once('receive-message', (msg) => {
+      editMessageId = msg.id;
+      resolve();
+    });
+  });
+
+  alice.emit('send-message', { text: encryptMessage('Good morning', roomCode), roomCode });
+  await aliceEditPromise;
+  assert(editMessageId !== null, 'Alice message sent successfully, ID captured');
+
+  // Set up Boris listener for edits
+  const borisEditPromise = new Promise(resolve => {
+    boris.once('message-edited', (msg) => {
+      resolve({
+        id: msg.id,
+        translatedText: decryptMessage(msg.translatedText, roomCode),
+      });
+    });
+  });
+
+  // Alice edits the message to "Goodbye"
+  const editResult = await new Promise(resolve => {
+    alice.emit('edit-message', { messageId: editMessageId, text: encryptMessage('Goodbye', roomCode), roomCode }, resolve);
+  });
+
+  assert(editResult.success, 'Alice edited message successfully');
+
+  const borisEditedMsg = await borisEditPromise;
+  assert(borisEditedMsg.id === editMessageId, 'Boris received message-edited event for correct ID');
+  assert(borisEditedMsg.translatedText === 'До свидания', `Boris sees translated edit: "${borisEditedMsg.translatedText}"`);
+
+  // ── Test 10: Message Unsending ──────────────────────
+  console.log('\n📋 Test 10: Message Unsending');
+
+  // Set up Boris listener for unsend
+  const borisUnsendPromise = new Promise(resolve => {
+    boris.once('message-unsent', (msg) => {
+      resolve(msg.id);
+    });
+  });
+
+  // Alice unsends the message
+  const unsendResult = await new Promise(resolve => {
+    alice.emit('unsend-message', { messageId: editMessageId, roomCode }, resolve);
+  });
+
+  assert(unsendResult.success, 'Alice unsent message successfully');
+
+  const unsentId = await borisUnsendPromise;
+  assert(unsentId === editMessageId, 'Boris received message-unsent event for correct ID');
+
+  // ── Test 11: Modification Expiration / Error Validation ──
+  console.log('\n📋 Test 11: Validation and Expiration Errors');
+
+  // Try to edit a non-existent message
+  const badEditResult = await new Promise(resolve => {
+    alice.emit('edit-message', { messageId: 'non-existent-id', text: encryptMessage('Hello', roomCode), roomCode }, resolve);
+  });
+  assert(badEditResult.error !== undefined, 'Editing non-existent message returns error');
+
+  // Try to unsend a non-existent message
+  const badUnsendResult = await new Promise(resolve => {
+    alice.emit('unsend-message', { messageId: 'non-existent-id', roomCode }, resolve);
+  });
+  assert(badUnsendResult.error !== undefined, 'Unsending non-existent message returns error');
+
   // ── Summary ──────────────────────────────────────
   console.log('\n' + '═'.repeat(50));
   console.log(`\n📊 Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);

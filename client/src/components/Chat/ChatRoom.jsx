@@ -15,6 +15,7 @@ export default function ChatRoom() {
   const [users, setUsers] = useState([]);
   const [translating, setTranslating] = useState(null);
   const [activePanel, setActivePanel] = useState('chat'); // 'sidebar' | 'chat'
+  const [editingMessage, setEditingMessage] = useState(null); // null | { id, text }
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -92,6 +93,25 @@ export default function ChatRoom() {
       setTimeout(() => setTranslating(null), 5000);
     };
 
+    const handleMessageEdited = ({ id, translatedText, originalText }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === id
+            ? {
+                ...msg,
+                translatedText: decryptMessage(translatedText, roomCode),
+                originalText: decryptMessage(originalText, roomCode),
+                isEdited: true,
+              }
+            : msg
+        )
+      );
+    };
+
+    const handleMessageUnsent = ({ id }) => {
+      setMessages((prev) => prev.filter((msg) => msg.id !== id));
+    };
+
     const handleError = ({ message }) => {
       console.error('[Chat] Error:', message);
     };
@@ -101,6 +121,8 @@ export default function ChatRoom() {
     socket.on('user-joined', handleUserJoined);
     socket.on('user-left', handleUserLeft);
     socket.on('translating', handleTranslating);
+    socket.on('message-edited', handleMessageEdited);
+    socket.on('message-unsent', handleMessageUnsent);
     socket.on('error', handleError);
 
     return () => {
@@ -109,14 +131,27 @@ export default function ChatRoom() {
       socket.off('user-joined', handleUserJoined);
       socket.off('user-left', handleUserLeft);
       socket.off('translating', handleTranslating);
+      socket.off('message-edited', handleMessageEdited);
+      socket.off('message-unsent', handleMessageUnsent);
       socket.off('error', handleError);
     };
   }, [socket, roomCode]);
 
   const handleSendMessage = (text) => {
     if (!socket || !roomCode) return;
-    const encryptedText = encryptMessage(text, roomCode);
-    socket.emit('send-message', { text: encryptedText, roomCode });
+    if (editingMessage) {
+      const encryptedText = encryptMessage(text, roomCode);
+      socket.emit('edit-message', { messageId: editingMessage.id, text: encryptedText, roomCode });
+      setEditingMessage(null);
+    } else {
+      const encryptedText = encryptMessage(text, roomCode);
+      socket.emit('send-message', { text: encryptedText, roomCode });
+    }
+  };
+
+  const handleUnsend = (messageId) => {
+    if (!socket || !roomCode) return;
+    socket.emit('unsend-message', { messageId, roomCode });
   };
 
   const handleLeave = () => {
@@ -248,6 +283,8 @@ export default function ChatRoom() {
                   key={msg.id}
                   message={msg}
                   currentUserId={socket?.id}
+                  onEdit={(id, text) => setEditingMessage({ id, text })}
+                  onUnsend={handleUnsend}
                 />
               );
             })}
@@ -269,7 +306,12 @@ export default function ChatRoom() {
           </div>
 
           {/* Message Input */}
-          <MessageInput onSend={handleSendMessage} disabled={!isConnected} />
+          <MessageInput 
+            onSend={handleSendMessage} 
+            disabled={!isConnected}
+            editingMessage={editingMessage}
+            onCancelEdit={() => setEditingMessage(null)}
+          />
         </div>
       </div>
     </div>

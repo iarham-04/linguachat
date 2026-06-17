@@ -11,6 +11,8 @@ const { saveRoom, saveMessage } = require('../config/firebase');
 const { isValidLanguage, getLanguageInfo } = require('../utils/languages');
 const { encryptMessage, decryptMessage } = require('../utils/crypto');
 
+const EDIT_TIME_LIMIT = 2 * 60 * 1000; // 2 minutes
+
 // ── In-Memory Storage ─────────────────────────────
 // Map<roomCode, { users: Map<socketId, userInfo>, messages: [] }>
 const rooms = new Map();
@@ -310,6 +312,134 @@ function registerSocketHandlers(io, socket) {
     } catch (error) {
       console.error('[Socket] Error sending message:', error);
       socket.emit('error', { message: 'Failed to send message' });
+    }
+  });
+
+  // ── Edit Message ──────────────────────────────────
+  socket.on('edit-message', async ({ messageId, text, roomCode }, callback) => {
+    try {
+      if (!text || !text.trim()) return;
+
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
+
+      if (!room || !room.users.has(socket.id)) {
+        if (callback) callback({ error: 'You are not in this room' });
+        return;
+      }
+
+      // Find message index
+      const messageIndex = room.messages.findIndex(m => m.id === messageId);
+      if (messageIndex === -1) {
+        if (callback) callback({ error: 'Message not found' });
+        return;
+      }
+
+      const message = room.messages[messageIndex];
+      if (message.senderId !== socket.id) {
+        if (callback) callback({ error: 'You can only edit your own messages' });
+        return;
+      }
+
+      const elapsed = Date.now() - message.timestamp;
+      if (elapsed > EDIT_TIME_LIMIT) {
+        if (callback) callback({ error: 'Time limit for editing has expired' });
+        return;
+      }
+
+      // Decrypt incoming message
+      const decryptedText = decryptMessage(text, code);
+      if (!decryptedText || !decryptedText.trim()) return;
+
+      const originalText = decryptedText.trim();
+      const sender = room.users.get(socket.id);
+
+      // Collect recipient languages
+      const recipientLangs = [];
+      for (const [sid, user] of room.users) {
+        if (sid !== socket.id) {
+          recipientLangs.push(user.lang);
+        }
+      }
+
+      // Translate updated text
+      const translations = await translateForRecipients(
+        originalText,
+        sender.lang,
+        recipientLangs
+      );
+
+      // Encrypt and update
+      const encryptedOriginalText = encryptMessage(originalText, code);
+      const encryptedTranslations = {};
+      for (const lang in translations) {
+        encryptedTranslations[lang] = encryptMessage(translations[lang], code);
+      }
+
+      message.originalText = encryptedOriginalText;
+      message.translations = encryptedTranslations;
+      message.isEdited = true;
+
+      // Broadcast message-edited to everyone with their translations
+      for (const [sid, user] of room.users) {
+        const isSelf = sid === socket.id;
+        const translatedText = isSelf ? originalText : (translations[user.lang] || originalText);
+        const encryptedTranslatedText = encryptMessage(translatedText, code);
+
+        io.to(sid).emit('message-edited', {
+          id: messageId,
+          translatedText: encryptedTranslatedText,
+          originalText: encryptedOriginalText,
+        });
+      }
+
+      if (callback) callback({ success: true });
+    } catch (error) {
+      console.error('[Socket] Error editing message:', error);
+      if (callback) callback({ error: 'Failed to edit message' });
+    }
+  });
+
+  // ── Unsend Message ────────────────────────────────
+  socket.on('unsend-message', ({ messageId, roomCode }, callback) => {
+    try {
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
+
+      if (!room || !room.users.has(socket.id)) {
+        if (callback) callback({ error: 'You are not in this room' });
+        return;
+      }
+
+      // Find message index
+      const messageIndex = room.messages.findIndex(m => m.id === messageId);
+      if (messageIndex === -1) {
+        if (callback) callback({ error: 'Message not found' });
+        return;
+      }
+
+      const message = room.messages[messageIndex];
+      if (message.senderId !== socket.id) {
+        if (callback) callback({ error: 'You can only unsend your own messages' });
+        return;
+      }
+
+      const elapsed = Date.now() - message.timestamp;
+      if (elapsed > EDIT_TIME_LIMIT) {
+        if (callback) callback({ error: 'Time limit for unsending has expired' });
+        return;
+      }
+
+      // Remove from history
+      room.messages.splice(messageIndex, 1);
+
+      // Broadcast message-unsent
+      io.to(code).emit('message-unsent', { id: messageId });
+
+      if (callback) callback({ success: true });
+    } catch (error) {
+      console.error('[Socket] Error unsending message:', error);
+      if (callback) callback({ error: 'Failed to unsend message' });
     }
   });
 

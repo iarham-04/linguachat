@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { getFlag, getLanguageName } from '../../utils/languages';
 import { parseNameAndAvatar } from '../../utils/avatar';
 
-export default function MessageBubble({ message }) {
+export default function MessageBubble({ message, onEdit, onUnsend }) {
   const [showOriginal, setShowOriginal] = useState(false);
   const isOwn = message.isOwn;
   const flag = getFlag(message.senderLang);
@@ -17,6 +17,9 @@ export default function MessageBubble({ message }) {
   const { name: cleanName, avatar: parsedAvatar } = parseNameAndAvatar(message.senderName);
   const avatarContent = parsedAvatar || '?';
   const isEmojiAvatar = avatarContent.length > 1 || avatarContent.charCodeAt(0) > 127;
+  
+  const elapsed = Date.now() - message.timestamp;
+  const canModify = isOwn && (elapsed < 120000); // 2 minutes
 
   const getAvatarGradient = (name) => {
     if (!name) return 'from-gray-600 to-gray-700';
@@ -35,7 +38,7 @@ export default function MessageBubble({ message }) {
   };
 
   return (
-    <div className={`flex items-end gap-2.5 ${isOwn ? 'justify-end' : 'justify-start'} animate-slide-up`}>
+    <div className={`flex items-end gap-2.5 ${isOwn ? 'justify-end' : 'justify-start'} animate-slide-up group`}>
       
       {/* Received Message Avatar (Left) */}
       {!isOwn && (
@@ -94,10 +97,30 @@ export default function MessageBubble({ message }) {
         </div>
 
         {/* Timestamp */}
-        <span className="text-[9px] text-gray-600 mt-1 select-none px-1">
-          {time}
+        <span className="text-[9px] text-gray-600 mt-1 select-none px-1 flex items-center gap-1.5">
+          <span>{time}</span>
+          {message.isEdited && <span className="text-gray-500 font-normal italic select-none">(edited)</span>}
         </span>
       </div>
+
+      {isOwn && canModify && (
+        <div className="flex gap-1 opacity-60 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity self-center mr-1.5 flex-shrink-0 select-none">
+          <button
+            onClick={() => onEdit(message.id, message.originalText)}
+            className="p-1.5 rounded-lg bg-[#1a1a1a] hover:bg-[#333] border border-[#2e2e2e] text-gray-400 hover:text-white text-[11px] cursor-pointer active:scale-90 transition-all"
+            title="Edit message"
+          >
+            ✏️
+          </button>
+          <button
+            onClick={() => onUnsend(message.id)}
+            className="p-1.5 rounded-lg bg-[#1a1a1a] hover:bg-red-950/20 border border-[#2e2e2e] text-gray-400 hover:text-red-400 text-[11px] cursor-pointer active:scale-90 transition-all"
+            title="Unsend message"
+          >
+            🗑️
+          </button>
+        </div>
+      )}
 
       {/* Sent Message Avatar (Right) */}
       {isOwn && (
