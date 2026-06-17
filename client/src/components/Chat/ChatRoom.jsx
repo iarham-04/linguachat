@@ -6,6 +6,7 @@ import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import { getFlag } from '../../utils/languages';
 import { encryptMessage, decryptMessage } from '../../utils/crypto';
+import { parseNameAndAvatar } from '../../utils/avatar';
 
 export default function ChatRoom() {
   const { socket, isConnected } = useSocket();
@@ -59,7 +60,7 @@ export default function ChatRoom() {
         {
           id: `system-${Date.now()}`,
           type: 'system',
-          text: `${joinedUser.name} joined the room`,
+          text: `${parseNameAndAvatar(joinedUser.name).name} joined the room`,
           timestamp: Date.now(),
         },
       ]);
@@ -71,14 +72,14 @@ export default function ChatRoom() {
         {
           id: `system-${Date.now()}`,
           type: 'system',
-          text: `${name} left the room`,
+          text: `${parseNameAndAvatar(name).name} left the room`,
           timestamp: Date.now(),
         },
       ]);
     };
 
     const handleTranslating = ({ senderName }) => {
-      setTranslating(senderName);
+      setTranslating(parseNameAndAvatar(senderName).name);
       // Auto-clear after 5 seconds (safety net)
       setTimeout(() => setTranslating(null), 5000);
     };
@@ -117,6 +118,9 @@ export default function ChatRoom() {
     }
     leaveRoom();
   };
+
+  const { name: cleanName, avatar: parsedAvatar } = parseNameAndAvatar(user?.name);
+  const isEmojiAvatar = parsedAvatar.length > 1 || parsedAvatar.charCodeAt(0) > 127;
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-[#121212] p-0 md:p-6 overflow-hidden">
@@ -158,9 +162,9 @@ export default function ChatRoom() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-white leading-tight">To: Everyone</span>
                   <span className="text-gray-600 text-xs">·</span>
-                  <span className="text-[11px] text-[#4CAF88] bg-[#4CAF88]/10 px-2 py-0.5 rounded-full border border-[#4CAF88]/20 font-medium flex items-center gap-1">
+                  <span className="text-[11px] text-[#4CAF88] bg-[#4CAF88]/10 px-2 py-0.5 rounded-full border border-[#4CAF88]/20 font-medium flex items-center gap-1 animate-fade-in">
                     <span className="leading-none">{getFlag(user.lang)}</span>
-                    <span>{user.name}</span>
+                    <span>{isEmojiAvatar ? parsedAvatar + ' ' : ''}{cleanName}</span>
                   </span>
                 </div>
                 <span className="text-[10px] text-gray-500 font-mono tracking-wider">Room: {roomCode}</span>

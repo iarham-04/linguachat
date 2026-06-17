@@ -123,7 +123,7 @@ async function runTests() {
 
   assert(borisMessages.length === 1, 'Boris received Alice\'s message');
   assert(borisMessages[0].isOwn === false, 'Boris\'s received message marked as not own');
-  assert(borisMessages[0].translatedText === '[Russian] Hello, Boris!', `Boris sees translated text: "${borisMessages[0].translatedText}"`);
+  assert(borisMessages[0].translatedText === 'Hello, Boris!', `Boris sees translated text: "${borisMessages[0].translatedText}"`);
   assert(borisMessages[0].originalText === 'Hello, Boris!', 'Original text preserved for Boris');
   assert(borisMessages[0].senderName === 'Alice', 'Sender name is correct');
   assert(borisMessages[0].senderLang === 'en', 'Sender language is correct');
@@ -144,7 +144,7 @@ async function runTests() {
   assert(borisMessages[0].translatedText === 'Привет, Алиса!', 'Boris sees original Russian text');
 
   assert(aliceMessages.length === 1, 'Alice received Boris\'s message');
-  assert(aliceMessages[0].translatedText === '[English] Привет, Алиса!', `Alice sees translated text: "${aliceMessages[0].translatedText}"`);
+  assert(aliceMessages[0].translatedText === 'Привет, Алиса!', `Alice sees translated text: "${aliceMessages[0].translatedText}"`);
   assert(aliceMessages[0].originalText === 'Привет, Алиса!', 'Original Russian text preserved for Alice');
   assert(aliceMessages[0].senderLang === 'ru', 'Sender language (ru) is correct');
 
@@ -176,9 +176,9 @@ async function runTests() {
   alice.emit('send-message', { text: encryptMessage('Hello everyone!', roomCode), roomCode });
   await sleep(1000);
 
-  assert(borisMessages.length === 1 && borisMessages[0].translatedText === '[Russian] Hello everyone!',
+  assert(borisMessages.length === 1 && borisMessages[0].translatedText === 'Hello everyone!',
     'Boris receives Russian translation');
-  assert(carlosMessages.length === 1 && carlosMessages[0].translatedText === '[Spanish] Hello everyone!',
+  assert(carlosMessages.length === 1 && carlosMessages[0].translatedText === 'Hello everyone!',
     'Carlos receives Spanish translation');
   assert(aliceMessages[0].translatedText === 'Hello everyone!',
     'Alice sees her own message untranslated');
@@ -221,7 +221,7 @@ async function runTests() {
 
   assert(aliceMessages.length === 1, 'Alice received Boris\'s message after language update');
   if (aliceMessages.length > 0) {
-    assert(aliceMessages[0].translatedText === '[Spanish] How are you?', 
+    assert(aliceMessages[0].translatedText === 'How are you?', 
       `Alice gets message translated to Spanish: "${aliceMessages[0].translatedText}"`);
   }
 

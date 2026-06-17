@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { LANGUAGES } from '../../utils/languages';
 import { useUser } from '../../contexts/UserContext';
+import { ANIMAL_AVATARS } from '../../utils/avatar';
 
 export default function LoginForm() {
   const { login } = useUser();
   const [name, setName] = useState('');
   const [lang, setLang] = useState('en');
+  const [selectedAvatar, setSelectedAvatar] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
@@ -18,7 +20,8 @@ export default function LoginForm() {
       setError('Name must be 20 characters or less');
       return;
     }
-    login(name.trim(), lang);
+    const finalName = selectedAvatar ? `${selectedAvatar} ${name.trim()}` : name.trim();
+    login(finalName, lang);
   };
 
   return (
@@ -63,6 +66,32 @@ export default function LoginForm() {
                          focus:ring-[#4CAF88] focus:border-[#4CAF88] transition-all duration-200"
               autoFocus
             />
+          </div>
+
+          <div>
+            <span className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              Choose Animal Avatar (Optional)
+            </span>
+            <div className="grid grid-cols-5 gap-2">
+              {ANIMAL_AVATARS.map((avatar) => {
+                const isSelected = selectedAvatar === avatar.emoji;
+                return (
+                  <button
+                    key={avatar.emoji}
+                    type="button"
+                    onClick={() => setSelectedAvatar(isSelected ? '' : avatar.emoji)}
+                    className={`h-10 rounded-xl flex items-center justify-center text-xl border transition-all duration-150 active:scale-95 ${
+                      isSelected 
+                        ? 'bg-[#4CAF88]/20 border-[#4CAF88] scale-105 shadow-md shadow-[#4CAF88]/10 text-2xl' 
+                        : 'bg-[#252525] border-[#333] hover:border-gray-600'
+                    }`}
+                    title={avatar.label}
+                  >
+                    {avatar.emoji}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div>

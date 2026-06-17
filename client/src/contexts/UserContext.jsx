@@ -3,11 +3,7 @@ import { createContext, useContext, useState, useCallback } from 'react';
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    // Restore from sessionStorage if available (tab refresh resilience)
-    const saved = sessionStorage.getItem('linguachat_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
 
   const [roomCode, setRoomCode] = useState(() => {
     return sessionStorage.getItem('linguachat_room') || null;

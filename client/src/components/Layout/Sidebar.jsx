@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getFlag, getLanguageName, LANGUAGES } from '../../utils/languages';
 import { useUser } from '../../contexts/UserContext';
 import { useSocket } from '../../contexts/SocketContext';
+import { parseNameAndAvatar } from '../../utils/avatar';
 
 export default function Sidebar({ users, roomCode, onLeave, onClose }) {
   const { user, changeLanguage } = useUser();
@@ -142,7 +143,8 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
       <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1">
         {users.map((roomUser) => {
           const isSelf = roomUser.name === user?.name;
-          const initials = roomUser.name.charAt(0).toUpperCase();
+          const { name: cleanName, avatar: parsedAvatar } = parseNameAndAvatar(roomUser.name);
+          const isEmojiAvatar = parsedAvatar.length > 1 || parsedAvatar.charCodeAt(0) > 127;
           
           const getAvatarGradient = (name) => {
             const gradients = [
@@ -162,14 +164,17 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
           return (
             <div
               key={roomUser.id}
+              onClick={onClose}
               className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#252525]/50 group transition-all duration-150 relative ${
                 isSelf ? 'bg-[#252525]/30' : ''
               }`}
             >
               {/* Circular Avatar on Left */}
               <div className="relative flex-shrink-0">
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(roomUser.name)} flex items-center justify-center text-white text-sm font-bold shadow-md`}>
-                  {initials}
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(cleanName)} flex items-center justify-center text-white font-bold shadow-md ${
+                  isEmojiAvatar ? 'text-2xl pt-0.5' : 'text-sm'
+                }`}>
+                  {parsedAvatar}
                 </div>
                 {/* Online Status Dot */}
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#4CAF88] rounded-full border-2 border-[#1a1a1a] shadow-md shadow-[#4CAF88]/20" />
@@ -179,7 +184,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between mb-0.5">
                   <p className="text-sm font-bold text-white group-hover:text-white truncate">
-                    {roomUser.name} {isSelf && <span className="text-[10px] text-gray-500 font-semibold">(You)</span>}
+                    {cleanName} {isSelf && <span className="text-[10px] text-gray-500 font-semibold">(You)</span>}
                   </p>
                   <span className="text-[10px] text-gray-500">12:45 PM</span>
                 </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getFlag, getLanguageName } from '../../utils/languages';
+import { parseNameAndAvatar } from '../../utils/avatar';
 
 export default function MessageBubble({ message }) {
   const [showOriginal, setShowOriginal] = useState(false);
@@ -13,7 +14,9 @@ export default function MessageBubble({ message }) {
   });
 
   const wasTranslated = !isOwn && message.translatedText !== message.originalText;
-  const initials = message.senderName ? message.senderName.charAt(0).toUpperCase() : '?';
+  const { name: cleanName, avatar: parsedAvatar } = parseNameAndAvatar(message.senderName);
+  const avatarContent = parsedAvatar || '?';
+  const isEmojiAvatar = avatarContent.length > 1 || avatarContent.charCodeAt(0) > 127;
 
   const getAvatarGradient = (name) => {
     if (!name) return 'from-gray-600 to-gray-700';
@@ -37,8 +40,10 @@ export default function MessageBubble({ message }) {
       {/* Received Message Avatar (Left) */}
       {!isOwn && (
         <div className="relative flex-shrink-0 mb-4 select-none">
-          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient(message.senderName)} flex items-center justify-center text-white text-xs font-bold shadow-md`}>
-            {initials}
+          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient(cleanName)} flex items-center justify-center text-white font-bold shadow-md ${
+            isEmojiAvatar ? 'text-lg pt-0.5' : 'text-xs'
+          }`}>
+            {avatarContent}
           </div>
         </div>
       )}
@@ -49,7 +54,7 @@ export default function MessageBubble({ message }) {
         {/* Sender Info for Received messages */}
         {!isOwn && (
           <span className="text-[10px] text-gray-500 font-semibold mb-1 ml-1 flex items-center gap-1.5 select-none">
-            <span>{message.senderName}</span>
+            <span>{cleanName}</span>
             <span className="text-[9px] text-gray-600 font-mono">[{message.senderLang.toUpperCase()}]</span>
             <span className="text-xs leading-none">{flag}</span>
           </span>
@@ -97,8 +102,10 @@ export default function MessageBubble({ message }) {
       {/* Sent Message Avatar (Right) */}
       {isOwn && (
         <div className="relative flex-shrink-0 mb-4 select-none">
-          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient(message.senderName)} flex items-center justify-center text-white text-xs font-bold shadow-md`}>
-            {initials}
+          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarGradient(cleanName)} flex items-center justify-center text-white font-bold shadow-md ${
+            isEmojiAvatar ? 'text-lg pt-0.5' : 'text-xs'
+          }`}>
+            {avatarContent}
           </div>
         </div>
       )}
