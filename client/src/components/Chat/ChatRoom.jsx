@@ -55,24 +55,32 @@ export default function ChatRoom() {
 
     const handleUserJoined = (joinedUser) => {
       // Add a system message
+      const { name: cName, avatar: pAvatar } = parseNameAndAvatar(joinedUser.name);
+      const isEmoji = pAvatar.length > 1 || pAvatar.charCodeAt(0) > 127;
+      const displayName = isEmoji ? `${pAvatar} ${cName}` : cName;
+
       setMessages((prev) => [
         ...prev,
         {
           id: `system-${Date.now()}`,
           type: 'system',
-          text: `${parseNameAndAvatar(joinedUser.name).name} joined the room`,
+          text: `${displayName} joined the room`,
           timestamp: Date.now(),
         },
       ]);
     };
 
     const handleUserLeft = ({ name }) => {
+      const { name: cName, avatar: pAvatar } = parseNameAndAvatar(name);
+      const isEmoji = pAvatar.length > 1 || pAvatar.charCodeAt(0) > 127;
+      const displayName = isEmoji ? `${pAvatar} ${cName}` : cName;
+
       setMessages((prev) => [
         ...prev,
         {
           id: `system-${Date.now()}`,
           type: 'system',
-          text: `${parseNameAndAvatar(name).name} left the room`,
+          text: `${displayName} left the room`,
           timestamp: Date.now(),
         },
       ]);
@@ -122,8 +130,25 @@ export default function ChatRoom() {
   const { name: cleanName, avatar: parsedAvatar } = parseNameAndAvatar(user?.name);
   const isEmojiAvatar = parsedAvatar.length > 1 || parsedAvatar.charCodeAt(0) > 127;
 
+  // Calculate header participants list
+  const otherUsers = users.filter((u) => u.name !== user?.name);
+  const otherUsersNames = otherUsers.map((u) => {
+    const { name: cName, avatar: pAvatar } = parseNameAndAvatar(u.name);
+    const isEmoji = pAvatar.length > 1 || pAvatar.charCodeAt(0) > 127;
+    return isEmoji ? `${pAvatar} ${cName}` : cName;
+  });
+
+  let participantsText = '';
+  if (otherUsersNames.length === 0) {
+    participantsText = 'Waiting for others...';
+  } else if (otherUsersNames.length <= 3) {
+    participantsText = `with ${otherUsersNames.join(', ')}`;
+  } else {
+    participantsText = `with ${otherUsersNames.slice(0, 3).join(', ')} and ${otherUsersNames.length - 3} more`;
+  }
+
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-[#121212] p-0 md:p-6 overflow-hidden">
+    <div className="h-[100dvh] w-screen flex items-center justify-center bg-[#121212] p-0 md:p-6 overflow-hidden">
       {/* Outer Floating Container */}
       <div className="w-full h-full max-w-6xl md:h-[90vh] bg-[#252525] rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.65)] border border-[#2e2e2e]/30 flex overflow-hidden relative">
         
@@ -146,28 +171,35 @@ export default function ChatRoom() {
           
           {/* Top Bar */}
           <div className="h-14 px-4 flex items-center justify-between border-b border-[#2e2e2e]/40 bg-[#252525] select-none">
-            <div className="flex items-center gap-3">
-              {/* Back Button (Mobile only) */}
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Sidebar toggle menu button (Mobile only) */}
               <button
                 onClick={() => setActivePanel('sidebar')}
-                className="md:hidden p-1.5 rounded-lg hover:bg-[#1e1e1e] text-gray-400 hover:text-white transition-colors"
-                title="Back to sidebar"
+                className="md:hidden p-2 rounded-xl bg-[#1e1e1e] border border-[#2e2e2e]/60 text-gray-400 hover:text-white transition-all active:scale-95 flex items-center justify-center relative flex-shrink-0"
+                title="Show participants and settings"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A11.386 11.386 0 0 1 10.089 18a11.374 11.374 0 0 1-5.003-1.05v-.109c0-1.113.285-2.16.786-3.07M19.5 7.572A3 3 0 1 1 19.5 1.5a3 3 0 0 1 0 6.072ZM10.5 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" />
                 </svg>
+                {users.length > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#4CAF88] text-white text-[9px] font-bold flex items-center justify-center border border-[#252525] shadow-sm">
+                    {users.length}
+                  </span>
+                )}
               </button>
               
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-white leading-tight">To: Everyone</span>
-                  <span className="text-gray-600 text-xs">·</span>
-                  <span className="text-[11px] text-[#4CAF88] bg-[#4CAF88]/10 px-2 py-0.5 rounded-full border border-[#4CAF88]/20 font-medium flex items-center gap-1 animate-fade-in">
+                  <span className="text-gray-600 text-xs flex-shrink-0">·</span>
+                  <span className="text-[11px] text-[#4CAF88] bg-[#4CAF88]/10 px-2 py-0.5 rounded-full border border-[#4CAF88]/20 font-medium flex items-center gap-1 animate-fade-in flex-shrink-0">
                     <span className="leading-none">{getFlag(user.lang)}</span>
                     <span>{isEmojiAvatar ? parsedAvatar + ' ' : ''}{cleanName}</span>
                   </span>
                 </div>
-                <span className="text-[10px] text-gray-500 font-mono tracking-wider">Room: {roomCode}</span>
+                <span className="text-[10px] text-gray-500 truncate max-w-[180px] sm:max-w-xs leading-normal">
+                  Room: {roomCode} • {participantsText}
+                </span>
               </div>
             </div>
           </div>

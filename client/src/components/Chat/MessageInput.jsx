@@ -54,7 +54,7 @@ export default function MessageInput({ onSend, disabled }) {
       {showPicker && (
         <div
           ref={pickerRef}
-          className="absolute left-4 bottom-16 w-[260px] bg-[#1a1a1a] border border-[#2e2e2e] rounded-xl p-3 shadow-2xl z-30 space-y-2 animate-slide-up"
+          className="absolute left-2 right-2 bottom-16 sm:left-4 sm:right-auto sm:w-[260px] bg-[#1a1a1a] border border-[#2e2e2e] rounded-xl p-3 shadow-2xl z-30 space-y-2 animate-slide-up"
         >
           <div className="flex justify-between items-center px-1">
             <span className="text-[10px] font-bold text-gray-500 bg-transparent uppercase tracking-wider">Quick Emojis</span>

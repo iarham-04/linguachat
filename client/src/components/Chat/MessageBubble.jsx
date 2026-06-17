@@ -49,7 +49,7 @@ export default function MessageBubble({ message }) {
       )}
 
       {/* Bubble + Text Box */}
-      <div className={`flex flex-col max-w-[75%] sm:max-w-[65%] ${isOwn ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col max-w-[85%] md:max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
         
         {/* Sender Info for Received messages */}
         {!isOwn && (
