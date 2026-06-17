@@ -68,7 +68,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
     <div className="w-full relative flex flex-col">
       {/* Editing message ribbon */}
       {editingMessage && (
-        <div className="px-4 py-2 bg-[#1a1a1a] border-t border-[#2e2e2e]/30 flex justify-between items-center text-xs text-gray-400 select-none animate-slide-up">
+        <div className="px-4 py-2 bg-theme-sidebar border-t border-theme-divider flex justify-between items-center text-xs text-gray-400 select-none animate-slide-up">
           <span className="truncate flex items-center gap-1.5">
             <span>✏️</span>
             <span>Editing message...</span>
@@ -83,12 +83,12 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 bg-[#252525] border-t border-[#2e2e2e]/40 select-none relative">
+      <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 bg-theme-panel border-t border-theme-divider select-none relative">
         {/* Floating Emoji Picker Popover */}
         {showPicker && (
           <div
             ref={pickerRef}
-            className="absolute left-2 right-2 bottom-16 sm:left-4 sm:right-auto sm:w-[260px] bg-[#1a1a1a] border border-[#2e2e2e] rounded-xl p-3 shadow-2xl z-30 space-y-2 animate-slide-up"
+            className="absolute left-2 right-2 bottom-16 sm:left-4 sm:right-auto sm:w-[260px] bg-theme-sidebar border border-theme-divider rounded-xl p-3 shadow-2xl z-30 space-y-2 animate-slide-up"
           >
             <div className="flex justify-between items-center px-1">
               <span className="text-[10px] font-bold text-gray-500 bg-transparent uppercase tracking-wider">Quick Emojis</span>
@@ -106,7 +106,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
                   key={emoji}
                   type="button"
                   onClick={() => handleEmojiClick(emoji)}
-                  className="h-8 rounded-lg flex items-center justify-center text-lg hover:bg-[#252525] active:scale-90 transition-all duration-100 bg-transparent border-0 cursor-pointer text-white"
+                  className="h-8 rounded-lg flex items-center justify-center text-lg hover:bg-theme-panel active:scale-90 transition-all duration-100 bg-transparent border-0 cursor-pointer text-white"
                 >
                   {emoji}
                 </button>
@@ -119,14 +119,14 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className="emoji-toggle-btn flex-shrink-0 w-10 h-10 rounded-xl bg-[#1a1a1a] border border-[#2e2e2e]/40 hover:bg-[#1e1e1e] text-gray-400 hover:text-white flex items-center justify-center transition-colors active:scale-95 pb-0.5"
+          className="emoji-toggle-btn flex-shrink-0 w-10 h-10 rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-gray-400 hover:text-white flex items-center justify-center transition-colors active:scale-95 pb-0.5"
           title="Add emoji"
         >
           <span className="text-2xl font-light leading-none">{showPicker ? '✕' : '+'}</span>
         </button>
 
         {/* Input container */}
-        <div className="flex-1 bg-[#1a1a1a] border border-[#2e2e2e]/40 rounded-xl px-2 py-1.5 flex items-center focus-within:border-[#333] transition-colors">
+        <div className="flex-1 bg-theme-sidebar border border-theme-divider rounded-xl px-2 py-1.5 flex items-center focus-within:border-theme-accent transition-colors">
           <textarea
             id="message-input"
             ref={inputRef}
@@ -150,7 +150,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
           id="send-button"
           type="submit"
           disabled={!text.trim() || disabled}
-          className="flex-shrink-0 px-4 h-10 rounded-xl text-white hover:text-white hover:bg-[#1e1e1e] font-semibold text-sm transition-all active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed bg-transparent border-0"
+          className="flex-shrink-0 px-4 h-10 rounded-xl text-white bg-theme-accent hover:bg-theme-accent-hover font-semibold text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-[var(--theme-glow)]"
         >
           {editingMessage ? 'Save' : 'Send'}
         </button>

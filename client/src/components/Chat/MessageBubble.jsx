@@ -67,8 +67,8 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
         <div
           className={`rounded-2xl px-4 py-2 shadow-sm ${
             isOwn
-              ? 'bg-[#333333] text-white rounded-tr-sm'
-              : 'bg-[#2e2e2e] text-gray-200 rounded-tl-sm border border-[#333]/20'
+              ? 'bg-theme-bubble-own text-white rounded-tr-sm'
+              : 'bg-theme-bubble-other text-gray-200 rounded-tl-sm border border-theme-divider'
           }`}
         >
           <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap">
@@ -77,7 +77,7 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
 
           {/* Show original button toggle */}
           {wasTranslated && (
-            <div className="mt-2 flex flex-col items-start border-t border-[#3a3a3a] pt-1.5">
+            <div className="mt-2 flex flex-col items-start border-t border-theme-divider pt-1.5">
               <button
                 onClick={() => setShowOriginal(!showOriginal)}
                 className="inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-white transition-colors"
@@ -107,14 +107,14 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
         <div className="flex gap-1 opacity-60 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity self-center mr-1.5 flex-shrink-0 select-none">
           <button
             onClick={() => onEdit(message.id, message.originalText)}
-            className="p-1.5 rounded-lg bg-[#1a1a1a] hover:bg-[#333] border border-[#2e2e2e] text-gray-400 hover:text-white text-[11px] cursor-pointer active:scale-90 transition-all"
+            className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-theme-bubble-own border border-theme-divider text-gray-400 hover:text-white text-[11px] cursor-pointer active:scale-90 transition-all"
             title="Edit message"
           >
             ✏️
           </button>
           <button
             onClick={() => onUnsend(message.id)}
-            className="p-1.5 rounded-lg bg-[#1a1a1a] hover:bg-red-950/20 border border-[#2e2e2e] text-gray-400 hover:text-red-400 text-[11px] cursor-pointer active:scale-90 transition-all"
+            className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-red-950/20 border border-theme-divider text-gray-400 hover:text-red-400 text-[11px] cursor-pointer active:scale-90 transition-all"
             title="Unsend message"
           >
             🗑️

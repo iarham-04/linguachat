@@ -25,17 +25,17 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#121212] p-4 overflow-y-auto">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-theme-outer p-4 overflow-y-auto">
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#4CAF88]/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[var(--theme-accent)]/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#f0c040]/5 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-sm animate-slide-up relative z-10 py-6">
         {/* Logo / Brand */}
         <div className="text-center mb-8 flex flex-col items-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1e1e1e] mb-3 border border-[#2e2e2e] shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-theme-sidebar mb-3 border border-theme-divider shadow-lg">
             <span className="text-3xl">🌐</span>
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">
@@ -49,7 +49,7 @@ export default function LoginForm() {
         </div>
 
         {/* Login Card */}
-        <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-6 sm:p-7 space-y-5 shadow-2xl">
+        <form onSubmit={handleSubmit} className="bg-theme-panel border border-theme-divider rounded-2xl p-6 sm:p-7 space-y-5 shadow-2xl">
           <div>
             <label htmlFor="display-name" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
               Display Name
@@ -61,9 +61,9 @@ export default function LoginForm() {
               onChange={(e) => { setName(e.target.value); setError(''); }}
               placeholder="Enter your name..."
               maxLength={20}
-              className="w-full px-4 py-3 rounded-xl bg-[#252525] border border-[#333] 
+              className="w-full px-4 py-3 rounded-xl bg-theme-sidebar border border-theme-divider 
                          text-white text-base placeholder-gray-600 focus:outline-none focus:ring-1 
-                         focus:ring-[#4CAF88] focus:border-[#4CAF88] transition-all duration-200"
+                         focus:ring-theme-accent focus:border-theme-accent transition-all duration-200"
               autoFocus
             />
           </div>
@@ -82,8 +82,8 @@ export default function LoginForm() {
                     onClick={() => setSelectedAvatar(isSelected ? '' : avatar.emoji)}
                     className={`h-10 rounded-xl flex items-center justify-center text-xl border transition-all duration-150 active:scale-95 ${
                       isSelected 
-                        ? 'bg-[#4CAF88]/20 border-[#4CAF88] scale-105 shadow-md shadow-[#4CAF88]/10 text-2xl' 
-                        : 'bg-[#252525] border-[#333] hover:border-gray-600'
+                        ? 'bg-theme-accent-light border-theme-accent scale-105 shadow-md shadow-[var(--theme-glow)] text-2xl' 
+                        : 'bg-theme-sidebar border-theme-divider hover:border-gray-600'
                     }`}
                     title={avatar.label}
                   >
@@ -102,9 +102,9 @@ export default function LoginForm() {
               id="language-select"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#252525] border border-[#333] 
-                         text-white text-base focus:outline-none focus:ring-1 focus:ring-[#4CAF88] 
-                         focus:border-[#4CAF88] transition-all duration-200 appearance-none
+              className="w-full px-4 py-3 rounded-xl bg-theme-sidebar border border-theme-divider 
+                         text-white text-base focus:outline-none focus:ring-1 focus:ring-theme-accent 
+                         focus:border-theme-accent transition-all duration-200 appearance-none
                          cursor-pointer"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
@@ -114,7 +114,7 @@ export default function LoginForm() {
               }}
             >
               {LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code} className="bg-[#1a1a1a] text-white">
+                <option key={l.code} value={l.code} className="bg-theme-panel text-white">
                   {l.flag} {l.name} ({l.nativeName})
                 </option>
               ))}
@@ -129,10 +129,10 @@ export default function LoginForm() {
             id="login-button"
             type="submit"
             className="w-full py-3 px-4 rounded-xl font-semibold text-white
-                       bg-[#4CAF88] hover:bg-[#439e7a]
-                       focus:outline-none focus:ring-2 focus:ring-[#4CAF88]/50
+                       bg-theme-accent hover:bg-theme-accent-hover
+                       focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]/50
                        active:scale-[0.98]
-                       transition-all duration-200 shadow-lg shadow-[#4CAF88]/10"
+                       transition-all duration-200 shadow-lg shadow-[var(--theme-glow)]"
           >
             Continue
           </button>

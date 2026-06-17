@@ -1,5 +1,6 @@
 import { SocketProvider } from './contexts/SocketContext';
 import { UserProvider, useUser } from './contexts/UserContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import LoginForm from './components/User/LoginForm';
 import RoomLobby from './components/Room/RoomLobby';
 import ChatRoom from './components/Chat/ChatRoom';
@@ -23,10 +24,12 @@ function AppRouter() {
 
 export default function App() {
   return (
-    <UserProvider>
-      <SocketProvider>
-        <AppRouter />
-      </SocketProvider>
-    </UserProvider>
+    <ThemeProvider>
+      <UserProvider>
+        <SocketProvider>
+          <AppRouter />
+        </SocketProvider>
+      </UserProvider>
+    </ThemeProvider>
   );
 }

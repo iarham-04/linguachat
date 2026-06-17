@@ -55,17 +55,17 @@ export default function RoomLobby() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#121212] p-4 overflow-y-auto">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-theme-outer p-4 overflow-y-auto">
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#4CAF88]/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[var(--theme-accent)]/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#f0c040]/5 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-sm animate-slide-up relative z-10 py-6">
         {/* Header */}
         <div className="text-center mb-8 flex flex-col items-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1e1e1e] mb-3 border border-[#2e2e2e] shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-theme-sidebar mb-3 border border-theme-divider shadow-lg">
             <span className="text-3xl">💬</span>
           </div>
           <h2 className="text-2xl font-bold text-white">
@@ -82,12 +82,12 @@ export default function RoomLobby() {
             <button
               id="create-room-btn"
               onClick={() => { setMode('create'); handleCreateRoom(); }}
-              className="w-full bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-5 text-left hover:bg-[#252525] 
-                         transition-all duration-200 group cursor-pointer shadow-xl hover:border-[#4CAF88]/30"
+              className="w-full bg-theme-panel border border-theme-divider rounded-2xl p-5 text-left hover:bg-theme-sidebar 
+                         transition-all duration-200 group cursor-pointer shadow-xl hover:border-theme-accent-border"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4CAF88] to-[#3b8c6b] 
-                                flex items-center justify-center text-2xl shadow-lg shadow-[#4CAF88]/10
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--theme-accent)] to-[var(--theme-accent-hover)] 
+                                flex items-center justify-center text-2xl shadow-lg shadow-[var(--theme-glow)]
                                 group-hover:scale-105 transition-transform">
                   ✨
                 </div>
@@ -101,13 +101,13 @@ export default function RoomLobby() {
             <button
               id="join-room-btn"
               onClick={() => setMode('join')}
-              className="w-full bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-5 text-left hover:bg-[#252525] 
-                         transition-all duration-200 group cursor-pointer shadow-xl hover:border-[#4CAF88]/30"
+              className="w-full bg-theme-panel border border-theme-divider rounded-2xl p-5 text-left hover:bg-theme-sidebar 
+                         transition-all duration-200 group cursor-pointer shadow-xl hover:border-theme-accent-border"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#252525] border border-[#333]
+                <div className="w-12 h-12 rounded-xl bg-theme-sidebar border border-theme-divider
                                 flex items-center justify-center text-2xl
-                                group-hover:scale-105 transition-transform text-[#4CAF88]">
+                                group-hover:scale-105 transition-transform text-theme-accent">
                   🔗
                 </div>
                 <div>
@@ -121,7 +121,7 @@ export default function RoomLobby() {
 
         {/* Join Room Form */}
         {mode === 'join' && (
-          <form onSubmit={handleJoinRoom} className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-6 sm:p-7 space-y-5 animate-fade-in shadow-2xl">
+          <form onSubmit={handleJoinRoom} className="bg-theme-panel border border-theme-divider rounded-2xl p-6 sm:p-7 space-y-5 animate-fade-in shadow-2xl">
             <div>
               <label htmlFor="room-code-input" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 text-center">
                 Room Code
@@ -133,9 +133,9 @@ export default function RoomLobby() {
                 onChange={(e) => { setRoomInput(e.target.value.toUpperCase()); setError(''); }}
                 placeholder="e.g. ABC123"
                 maxLength={6}
-                className="w-full px-4 py-4 rounded-xl bg-[#252525] border border-[#333] 
+                className="w-full px-4 py-4 rounded-xl bg-theme-sidebar border border-theme-divider 
                            text-white text-center text-2xl font-mono tracking-[0.2em] placeholder-gray-700
-                           focus:outline-none focus:ring-1 focus:ring-[#4CAF88] focus:border-[#4CAF88] 
+                           focus:outline-none focus:ring-1 focus:ring-theme-accent focus:border-theme-accent 
                            transition-all duration-200 uppercase"
                 autoFocus
               />
@@ -150,7 +150,7 @@ export default function RoomLobby() {
                 type="button"
                 onClick={() => { setMode(null); setError(''); setRoomInput(''); }}
                 className="flex-1 py-3 px-4 rounded-xl font-medium text-gray-400 
-                           bg-[#252525] border border-[#333] hover:bg-[#2e2e2e] hover:text-white
+                           bg-theme-sidebar border border-theme-divider hover:bg-theme-panel hover:text-white
                            transition-all duration-200 text-sm"
               >
                 Back
@@ -160,9 +160,9 @@ export default function RoomLobby() {
                 type="submit"
                 disabled={loading || roomInput.length < 6}
                 className="flex-1 py-3 px-4 rounded-xl font-semibold text-white
-                           bg-[#4CAF88] hover:bg-[#439e7a]
+                           bg-theme-accent hover:bg-theme-accent-hover
                            disabled:opacity-40 disabled:cursor-not-allowed
-                           transition-all duration-200 shadow-lg shadow-[#4CAF88]/10 text-sm"
+                           transition-all duration-200 shadow-lg shadow-[var(--theme-glow)] text-sm"
               >
                 {loading ? 'Joining...' : 'Join Room'}
               </button>
@@ -172,11 +172,11 @@ export default function RoomLobby() {
 
         {/* Creating Room Loader */}
         {mode === 'create' && loading && (
-          <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-8 text-center animate-fade-in shadow-2xl">
+          <div className="bg-theme-panel border border-theme-divider rounded-2xl p-8 text-center animate-fade-in shadow-2xl">
             <div className="flex justify-center gap-1.5 mb-4">
-              <span className="w-2.5 h-2.5 bg-[#4CAF88] rounded-full animate-pulse" />
+              <span className="w-2.5 h-2.5 bg-theme-accent rounded-full animate-pulse" />
               <span className="w-2.5 h-2.5 bg-[#f0c040] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-              <span className="w-2.5 h-2.5 bg-[#4CAF88] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+              <span className="w-2.5 h-2.5 bg-theme-accent rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
             </div>
             <p className="text-gray-400 text-sm">Creating your room...</p>
           </div>
@@ -184,12 +184,12 @@ export default function RoomLobby() {
 
         {/* Create Room Error */}
         {mode === 'create' && !loading && error && (
-          <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-8 space-y-4 animate-fade-in shadow-2xl">
+          <div className="bg-theme-panel border border-theme-divider rounded-2xl p-8 space-y-4 animate-fade-in shadow-2xl">
             <p className="text-red-400 text-sm text-center">{error}</p>
             <button
               onClick={() => { setMode(null); setError(''); }}
               className="w-full py-3 px-4 rounded-xl font-medium text-gray-400 
-                         bg-[#252525] border border-[#333] hover:bg-[#2e2e2e] hover:text-white
+                         bg-theme-sidebar border border-theme-divider hover:bg-theme-panel hover:text-white
                          transition-all duration-200 text-sm"
             >
               Back

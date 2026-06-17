@@ -183,14 +183,14 @@ export default function ChatRoom() {
   }
 
   return (
-    <div className="h-[100dvh] w-screen flex items-center justify-center bg-[#121212] p-0 md:p-6 overflow-hidden">
+    <div className="h-[100dvh] w-screen flex items-center justify-center bg-theme-outer p-0 md:p-6 overflow-hidden">
       {/* Outer Floating Container */}
-      <div className="w-full h-full max-w-6xl md:h-[90vh] bg-[#252525] rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.65)] border border-[#2e2e2e]/30 flex overflow-hidden relative">
+      <div className="w-full h-full max-w-6xl md:h-[90vh] bg-theme-panel rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.65)] border border-theme-divider flex overflow-hidden relative">
         
         {/* Left Sidebar Panel */}
         <div className={`${
           activePanel === 'sidebar' ? 'flex w-full' : 'hidden'
-        } md:flex md:w-[280px] flex-shrink-0 border-r border-[#2e2e2e]/40`}>
+        } md:flex md:w-[280px] flex-shrink-0 border-r border-theme-divider`}>
           <Sidebar 
             users={users} 
             roomCode={roomCode} 
@@ -202,22 +202,22 @@ export default function ChatRoom() {
         {/* Right Chat Panel */}
         <div className={`${
           activePanel === 'chat' ? 'flex' : 'hidden'
-        } md:flex flex-1 flex-col min-w-0 bg-[#252525]`}>
+        } md:flex flex-1 flex-col min-w-0 bg-theme-panel`}>
           
           {/* Top Bar */}
-          <div className="h-14 px-4 flex items-center justify-between border-b border-[#2e2e2e]/40 bg-[#252525] select-none">
+          <div className="h-14 px-4 flex items-center justify-between border-b border-theme-divider bg-theme-panel select-none">
             <div className="flex items-center gap-3 min-w-0">
               {/* Sidebar toggle menu button (Mobile only) */}
               <button
                 onClick={() => setActivePanel('sidebar')}
-                className="md:hidden p-2 rounded-xl bg-[#1e1e1e] border border-[#2e2e2e]/60 text-gray-400 hover:text-white transition-all active:scale-95 flex items-center justify-center relative flex-shrink-0"
+                className="md:hidden p-2 rounded-xl bg-theme-sidebar border border-theme-divider text-gray-400 hover:text-white transition-all active:scale-95 flex items-center justify-center relative flex-shrink-0"
                 title="Show participants and settings"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A11.386 11.386 0 0 1 10.089 18a11.374 11.374 0 0 1-5.003-1.05v-.109c0-1.113.285-2.16.786-3.07M19.5 7.572A3 3 0 1 1 19.5 1.5a3 3 0 0 1 0 6.072ZM10.5 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" />
                 </svg>
                 {users.length > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#4CAF88] text-white text-[9px] font-bold flex items-center justify-center border border-[#252525] shadow-sm">
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-theme-accent text-white text-[9px] font-bold flex items-center justify-center border border-theme-panel shadow-sm">
                     {users.length}
                   </span>
                 )}
@@ -227,7 +227,7 @@ export default function ChatRoom() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-white leading-tight">To: Everyone</span>
                   <span className="text-gray-600 text-xs flex-shrink-0">·</span>
-                  <span className="text-[11px] text-[#4CAF88] bg-[#4CAF88]/10 px-2 py-0.5 rounded-full border border-[#4CAF88]/20 font-medium flex items-center gap-1 animate-fade-in flex-shrink-0">
+                  <span className="text-[11px] text-theme-accent bg-theme-accent-light px-2 py-0.5 rounded-full border border-theme-accent-border font-medium flex items-center gap-1 animate-fade-in flex-shrink-0">
                     <span className="leading-none">{getFlag(user.lang)}</span>
                     <span>{isEmojiAvatar ? parsedAvatar + ' ' : ''}{cleanName}</span>
                   </span>
@@ -242,12 +242,12 @@ export default function ChatRoom() {
           {/* Chat Messages Area */}
           <div
             ref={chatContainerRef}
-            className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scroll-smooth bg-[#252525]"
+            className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scroll-smooth bg-theme-panel"
           >
             {/* Date separator pill TODAY in center */}
             {messages.length > 0 && (
               <div className="flex justify-center my-3">
-                <span className="text-[10px] font-bold text-gray-500 bg-[#1e1e1e] border border-[#2e2e2e]/80 px-3 py-1 rounded-full uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-gray-500 bg-theme-sidebar border border-theme-divider px-3 py-1 rounded-full uppercase tracking-wider">
                   Today
                 </span>
               </div>
@@ -256,7 +256,7 @@ export default function ChatRoom() {
             {/* Welcome message */}
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center py-12 animate-fade-in select-none">
-                <div className="w-16 h-16 rounded-2xl bg-[#1e1e1e] border border-[#333] flex items-center justify-center mb-4 shadow-lg">
+                <div className="w-16 h-16 rounded-2xl bg-theme-sidebar border border-theme-divider flex items-center justify-center mb-4 shadow-lg">
                   <span className="text-3xl">🌍</span>
                 </div>
                 <h3 className="text-base font-bold text-white mb-1">Room is ready!</h3>
@@ -272,7 +272,7 @@ export default function ChatRoom() {
               if (msg.type === 'system') {
                 return (
                   <div key={msg.id} className="flex justify-center animate-fade-in">
-                    <span className="text-[10px] text-gray-500 bg-[#1e1e1e] border border-[#2e2e2e]/60 px-3.5 py-1 rounded-full tracking-wider font-semibold">
+                    <span className="text-[10px] text-gray-500 bg-theme-sidebar border border-theme-divider px-3.5 py-1 rounded-full tracking-wider font-semibold">
                       {msg.text}
                     </span>
                   </div>

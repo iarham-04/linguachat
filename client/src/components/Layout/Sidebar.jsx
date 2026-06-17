@@ -3,10 +3,12 @@ import { getFlag, getLanguageName, LANGUAGES } from '../../utils/languages';
 import { useUser } from '../../contexts/UserContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { parseNameAndAvatar } from '../../utils/avatar';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function Sidebar({ users, roomCode, onLeave, onClose }) {
   const { user, changeLanguage } = useUser();
   const { socket } = useSocket();
+  const { theme, setTheme, themes } = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLangChange = (e) => {
@@ -18,7 +20,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#1a1a1a] relative select-none">
+    <div className="w-full h-full flex flex-col bg-theme-sidebar relative select-none">
       {/* Sidebar header */}
       <div className="p-4 flex flex-col relative">
         <div className="flex items-center justify-between mb-1">
@@ -33,7 +35,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
             {/* Settings/Hamburger Toggle button */}
             <button
               onClick={() => setSettingsOpen(!settingsOpen)}
-              className="p-1.5 rounded-lg hover:bg-[#252525] text-gray-400 hover:text-white transition-all active:scale-95"
+              className="p-1.5 rounded-lg hover:bg-theme-panel text-gray-400 hover:text-white transition-all active:scale-95"
               title="Settings"
               id="sidebar-settings-btn"
             >
@@ -44,7 +46,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
             {onClose && (
               <button
                 onClick={onClose}
-                className="md:hidden p-1.5 rounded-lg hover:bg-[#252525] text-gray-400 hover:text-white transition-all"
+                className="md:hidden p-1.5 rounded-lg hover:bg-theme-panel text-gray-400 hover:text-white transition-all"
                 title="Close"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -58,23 +60,23 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
         {/* Short Gold/Yellow Accent Line */}
         <div className="w-[40px] h-[3px] bg-[#f0c040] rounded mt-1 mb-2" />
 
-        {/* Floating Settings Dropdown Modal */}
+         {/* Floating Settings Dropdown Modal */}
         {settingsOpen && (
-          <div className="absolute right-4 top-14 w-60 bg-[#252525] border border-[#333] rounded-xl p-4 shadow-2xl z-30 space-y-3.5 animate-slide-up">
+          <div className="absolute right-4 top-14 w-60 bg-theme-panel border border-theme-divider rounded-xl p-4 shadow-2xl z-30 space-y-3.5 animate-slide-up">
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Settings</span>
                 <button onClick={() => setSettingsOpen(false)} className="text-gray-500 hover:text-white text-xs">✕</button>
               </div>
               
-              <div className="flex items-center gap-1.5 bg-[#1a1a1a] p-2 rounded-lg border border-[#333] mb-3">
+              <div className="flex items-center gap-1.5 bg-theme-sidebar p-2 rounded-lg border border-theme-divider mb-3">
                 <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider flex-1">Room Code:</span>
                 <code className="text-xs font-mono text-[#f0c040] tracking-wider">{roomCode}</code>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(roomCode);
                   }}
-                  className="p-1 rounded bg-[#252525] hover:bg-[#333] text-gray-400 hover:text-white text-[10px]"
+                  className="p-1 rounded bg-theme-panel hover:bg-theme-bubble-own text-gray-400 hover:text-white text-[10px]"
                   title="Copy room code"
                 >
                   📋
@@ -92,8 +94,8 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
                     id="sidebar-language-select"
                     value={user.lang}
                     onChange={handleLangChange}
-                    className="w-full px-3 py-2 rounded-lg bg-[#1a1a1a] border border-[#333] 
-                               text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#4CAF88] 
+                    className="w-full px-3 py-2 rounded-lg bg-theme-sidebar border border-theme-divider 
+                               text-white text-xs focus:outline-none focus:ring-1 focus:ring-theme-accent 
                                transition-all duration-200 appearance-none cursor-pointer"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
@@ -103,7 +105,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
                     }}
                   >
                     {LANGUAGES.map((lang) => (
-                      <option key={lang.code} value={lang.code} className="bg-[#1a1a1a] text-white">
+                      <option key={lang.code} value={lang.code} className="bg-theme-sidebar text-white">
                         {lang.flag} {lang.name}
                       </option>
                     ))}
@@ -111,6 +113,36 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
                 </div>
               </div>
             )}
+
+            {/* Theme Selector */}
+            <div className="space-y-1.5">
+              <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                Chat Theme
+              </span>
+              <div className="flex gap-2 justify-between items-center bg-theme-sidebar p-2 rounded-lg border border-theme-divider">
+                {Object.values(themes).map((t) => {
+                  const isSelected = theme === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTheme(t.id)}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all relative cursor-pointer active:scale-90 ${
+                        isSelected 
+                          ? 'scale-110 shadow-md border-white' 
+                          : 'border-transparent opacity-65 hover:opacity-100 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: t.color }}
+                      title={t.name}
+                    >
+                      <span>{t.emoji}</span>
+                      {isSelected && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white rounded-full flex items-center justify-center border border-black" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <button
               id="leave-room-btn"
@@ -130,7 +162,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
       <div className="px-4 py-2 flex items-center justify-between text-gray-400">
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">RECENT CHATS</span>
-          <span className="text-[10px] font-semibold text-[#4CAF88] bg-[#4CAF88]/10 px-1.5 py-0.5 rounded-full border border-[#4CAF88]/20">
+          <span className="text-[10px] font-semibold text-theme-accent bg-theme-accent-light px-1.5 py-0.5 rounded-full border border-theme-accent-border">
             {users.length}
           </span>
         </div>
@@ -165,8 +197,8 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
             <div
               key={roomUser.id}
               onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#252525]/50 group transition-all duration-150 relative ${
-                isSelf ? 'bg-[#252525]/30' : ''
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-theme-panel/50 group transition-all duration-150 relative ${
+                isSelf ? 'bg-theme-panel/30' : ''
               }`}
             >
               {/* Circular Avatar on Left */}
@@ -177,7 +209,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
                   {parsedAvatar}
                 </div>
                 {/* Online Status Dot */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#4CAF88] rounded-full border-2 border-[#1a1a1a] shadow-md shadow-[#4CAF88]/20" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-theme-accent rounded-full border-2 border-theme-sidebar shadow-md shadow-[var(--theme-glow)]" />
               </div>
 
               {/* Name + Details */}
@@ -200,7 +232,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
       </div>
 
       {/* Bottom of sidebar: three dots option */}
-      <div className="py-3 flex justify-center border-t border-[#252525]">
+      <div className="py-3 flex justify-center border-t border-theme-divider">
         <button
           onClick={() => setSettingsOpen(!settingsOpen)}
           className="text-gray-600 hover:text-white transition-colors tracking-[0.2em] font-extrabold text-sm"
