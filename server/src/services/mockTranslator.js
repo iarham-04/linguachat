@@ -219,6 +219,56 @@ const TEST_PHRASES = {
   }
 };
 
+function findConceptMatch(input, targetLang) {
+  for (const conceptKey of Object.keys(DICTIONARY)) {
+    const translations = DICTIONARY[conceptKey];
+    for (const langCode of Object.keys(translations)) {
+      const val = translations[langCode];
+      if (typeof val === 'string') {
+        const normalizedVal = val.trim().toLowerCase();
+        // Check exact match
+        if (normalizedVal === input) {
+          if (translations[targetLang]) {
+            return translations[targetLang];
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function lookupLocalTranslation(text, targetLang) {
+  const normalizedInput = text.trim().toLowerCase();
+
+  // Try exact lookup first
+  const match = findConceptMatch(normalizedInput, targetLang);
+  if (match) return match;
+
+  // Try lookup without trailing/leading punctuation
+  const cleanInput = normalizedInput.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").trim();
+  
+  // If cleanInput is empty after stripping, just return null
+  if (!cleanInput) return null;
+
+  for (const conceptKey of Object.keys(DICTIONARY)) {
+    const translations = DICTIONARY[conceptKey];
+    for (const langCode of Object.keys(translations)) {
+      const val = translations[langCode];
+      if (typeof val === 'string') {
+        const cleanVal = val.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").trim();
+        if (cleanVal === cleanInput) {
+          if (translations[targetLang]) {
+            return translations[targetLang];
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 /**
  * Simulate translation or lookup.
  * In production, replace this with actual API calls to Google Translate, DeepL, etc.
@@ -242,8 +292,9 @@ async function translate(text, sourceLang, targetLang) {
   }
 
   // Check robust local pre-translated dictionary
-  if (DICTIONARY[lowerText] && DICTIONARY[lowerText][targetLang]) {
-    return DICTIONARY[lowerText][targetLang];
+  const localMatch = lookupLocalTranslation(text, targetLang);
+  if (localMatch) {
+    return localMatch;
   }
 
   // Real translation using MyMemory API (free, public, no key required)
