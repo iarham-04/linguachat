@@ -30,11 +30,28 @@ export default function ChatRoom() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Request user list on mount (handles race condition with room-users event)
+  // Auto-join room on socket connection/reconnection or page refresh
   useEffect(() => {
-    if (!socket || !roomCode) return;
-    socket.emit('request-room-users', { roomCode });
-  }, [socket, roomCode]);
+    if (!socket || !isConnected || !user || !roomCode) return;
+
+    socket.emit('join-room', { roomCode, userName: user.name, userLang: user.lang }, (res) => {
+      if (res.error) {
+        console.error('[ChatRoom] Auto-join failed:', res.error);
+        // If join failed (e.g. room deleted or name taken), leave the room in UI
+        leaveRoom();
+      } else {
+        console.log('[ChatRoom] Auto-joined room:', res.roomCode);
+        setUsers(res.users);
+        if (res.messages && messages.length === 0) {
+          setMessages(res.messages.map(msg => ({
+            ...msg,
+            translatedText: decryptMessage(msg.translatedText, roomCode),
+            originalText: decryptMessage(msg.originalText, roomCode),
+          })));
+        }
+      }
+    });
+  }, [socket, isConnected, user, roomCode, leaveRoom]);
 
   // Socket event listeners
   useEffect(() => {
@@ -202,7 +219,7 @@ export default function ChatRoom() {
         {/* Right Chat Panel */}
         <div className={`${
           activePanel === 'chat' ? 'flex' : 'hidden'
-        } md:flex flex-1 flex-col min-w-0 bg-transparent`}>
+        } md:flex flex-1 flex-col min-w-0 bg-theme-panel`}>
           
           {/* Top Bar */}
           <div className="h-14 px-4 flex items-center justify-between border-b border-theme-divider bg-theme-panel select-none">

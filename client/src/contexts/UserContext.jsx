@@ -3,7 +3,14 @@ import { createContext, useContext, useState, useCallback } from 'react';
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem('linguachat_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   const [roomCode, setRoomCode] = useState(() => {
     return sessionStorage.getItem('linguachat_room') || null;
