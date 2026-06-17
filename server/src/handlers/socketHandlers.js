@@ -127,9 +127,9 @@ function registerSocketHandlers(io, socket) {
         return callback({ error: 'Room is full (max 4 users)' });
       }
 
-      // Check for duplicate names in the room
-      for (const [, user] of room.users) {
-        if (user.name.toLowerCase() === userName.trim().toLowerCase()) {
+      // Check for duplicate names in the room (ignoring if it is the same socket re-joining)
+      for (const [socketId, user] of room.users) {
+        if (user.name.toLowerCase() === userName.trim().toLowerCase() && socketId !== socket.id) {
           return callback({ error: 'A user with this name is already in the room' });
         }
       }

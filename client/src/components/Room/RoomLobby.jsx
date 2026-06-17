@@ -12,7 +12,11 @@ export default function RoomLobby() {
   const [createdCode, setCreatedCode] = useState('');
 
   const handleCreateRoom = () => {
-    if (!socket) return;
+    if (!socket) {
+      setError('Connection to server lost. Please try again.');
+      setMode(null);
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -32,7 +36,11 @@ export default function RoomLobby() {
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    if (!socket || !roomInput.trim()) return;
+    if (!roomInput.trim()) return;
+    if (!socket) {
+      setError('Connection to server lost. Please try again.');
+      return;
+    }
     setLoading(true);
     setError('');
 
