@@ -119,7 +119,7 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
               <span className="block text-[10px] font-bold text-theme-secondary uppercase tracking-wider">
                 Chat Theme
               </span>
-              <div className="flex gap-2 justify-between items-center bg-theme-sidebar p-2 rounded-lg border border-theme-divider">
+              <div className="grid grid-cols-6 gap-2 justify-items-center bg-theme-sidebar p-2 rounded-lg border border-theme-divider">
                 {Object.values(themes).map((t) => {
                   const isSelected = theme === t.id;
                   return (
