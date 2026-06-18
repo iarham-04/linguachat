@@ -4,6 +4,29 @@ import { useAuth, useUser as useClerkUser } from '@clerk/clerk-react';
 const UserContext = createContext(null);
 const hasClerk = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
+const saveRecentRoom = (code) => {
+  if (!code) return;
+  const upperCode = code.toUpperCase();
+  try {
+    const stored = localStorage.getItem('linguachat_recent_rooms');
+    let rooms = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(rooms)) {
+      rooms = [];
+    }
+    const now = Date.now();
+    // Filter rooms older than 24 hours
+    rooms = rooms.filter(r => now - r.joinedAt < 24 * 60 * 60 * 1000);
+    // Avoid duplicates
+    rooms = rooms.filter(r => r.code !== upperCode);
+    // Put newest joined room at the front
+    rooms.unshift({ code: upperCode, joinedAt: now });
+    // Keep max 10 rooms
+    localStorage.setItem('linguachat_recent_rooms', JSON.stringify(rooms.slice(0, 10)));
+  } catch (e) {
+    console.error('[UserContext] Error saving recent room:', e);
+  }
+};
+
 // ── Clerk Authentication Provider ─────────────────
 function ClerkUserProvider({ children }) {
   const { isSignedIn, user: clerkUser } = useClerkUser();
@@ -107,6 +130,7 @@ function ClerkUserProvider({ children }) {
   const joinRoom = useCallback((code) => {
     setRoomCode(code);
     sessionStorage.setItem('linguachat_room', code);
+    saveRecentRoom(code);
   }, []);
 
   const leaveRoom = useCallback(() => {
@@ -236,6 +260,7 @@ function BypassUserProvider({ children }) {
   const joinRoom = useCallback((code) => {
     setRoomCode(code);
     sessionStorage.setItem('linguachat_room', code);
+    saveRecentRoom(code);
   }, []);
 
   const leaveRoom = useCallback(() => {

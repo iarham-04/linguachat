@@ -1,6 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSocket } from '../../contexts/SocketContext';
 import { useUser } from '../../contexts/UserContext';
+
+const getRelativeTimeString = (timestamp) => {
+  const diffMs = Date.now() - timestamp;
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffSecs < 60) {
+    return 'Just joined';
+  } else if (diffMins < 60) {
+    return `Joined ${diffMins}m ago`;
+  } else {
+    return `Joined ${diffHours}h ago`;
+  }
+};
 
 export default function RoomLobby() {
   const { socket } = useSocket();
@@ -10,6 +25,70 @@ export default function RoomLobby() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [createdCode, setCreatedCode] = useState('');
+  const [recentRooms, setRecentRooms] = useState([]);
+
+  useEffect(() => {
+    const loadRecentRooms = () => {
+      try {
+        const stored = localStorage.getItem('linguachat_recent_rooms');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            const now = Date.now();
+            const validRooms = parsed.filter(r => now - r.joinedAt < 24 * 60 * 60 * 1000);
+            if (validRooms.length !== parsed.length) {
+              localStorage.setItem('linguachat_recent_rooms', JSON.stringify(validRooms));
+            }
+            setRecentRooms(validRooms);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load recent rooms:', e);
+      }
+    };
+
+    loadRecentRooms();
+  }, []);
+
+  const removeRecentRoom = (code) => {
+    try {
+      const stored = localStorage.getItem('linguachat_recent_rooms');
+      if (stored) {
+        let parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          parsed = parsed.filter(r => r.code !== code.toUpperCase());
+          localStorage.setItem('linguachat_recent_rooms', JSON.stringify(parsed));
+          setRecentRooms(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to remove recent room:', e);
+    }
+  };
+
+  const handleRejoinRoom = (code) => {
+    if (!socket) {
+      setError('Connection to server lost. Please try again.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+
+    socket.emit('join-room', {
+      roomCode: code.toUpperCase(),
+      userId: user.id,
+      userName: user.name,
+      userLang: user.lang,
+    }, (response) => {
+      setLoading(false);
+      if (response.error) {
+        setError(response.error);
+        removeRecentRoom(code);
+      } else {
+        joinRoom(response.roomCode);
+      }
+    });
+  };
 
   const handleCreateRoom = () => {
     if (!socket) {
@@ -86,8 +165,16 @@ export default function RoomLobby() {
           <p className="text-theme-secondary text-xs mt-1">Create a new room or join an existing one</p>
         </div>
 
+        {/* Error notification on lobby */}
+        {!mode && error && (
+          <div className="mb-4 bg-red-400/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-3 text-center flex items-center justify-between animate-fade-in">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="ml-2 font-bold hover:text-white transition-colors cursor-pointer">&times;</button>
+          </div>
+        )}
+
         {/* Mode Selection */}
-        {!mode && (
+        {!mode && !loading && (
           <div className="space-y-4 animate-fade-in">
             <button
               id="create-room-btn"
@@ -126,6 +213,75 @@ export default function RoomLobby() {
                 </div>
               </div>
             </button>
+          </div>
+        )}
+
+        {/* Recent Rooms */}
+        {!mode && !loading && recentRooms.length > 0 && (
+          <div className="mt-8 space-y-3 animate-fade-in">
+            <h3 className="text-xs font-semibold text-theme-secondary uppercase tracking-wider text-center">
+              Recent Rooms (Joined within 24h)
+            </h3>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {recentRooms.map((room) => (
+                <div
+                  key={room.code}
+                  className="flex items-center justify-between bg-theme-panel border border-theme-divider 
+                             rounded-xl p-3 hover:bg-theme-sidebar transition-all duration-200 group"
+                >
+                  <button
+                    onClick={() => handleRejoinRoom(room.code)}
+                    disabled={loading}
+                    className="flex-1 flex items-center justify-between text-left cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-theme-sidebar border border-theme-divider
+                                      flex items-center justify-center text-sm font-semibold text-theme-accent">
+                        💬
+                      </div>
+                      <div>
+                        <span className="font-mono font-bold text-sm tracking-wider text-theme-primary group-hover:text-theme-accent transition-colors">
+                          {room.code}
+                        </span>
+                        <span className="block text-[10px] text-theme-secondary">
+                          {getRelativeTimeString(room.joinedAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-theme-accent group-hover:translate-x-0.5 transition-transform mr-2">
+                      Rejoin &rarr;
+                    </span>
+                  </button>
+                  
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRecentRoom(room.code);
+                    }}
+                    className="p-1.5 rounded-lg text-theme-secondary hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                    title="Remove from history"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Rejoining Room Loader */}
+        {!mode && loading && (
+          <div className="bg-theme-panel border border-theme-divider rounded-2xl p-8 text-center animate-fade-in shadow-2xl">
+            <div className="flex justify-center gap-1.5 mb-4">
+              <span className="w-2.5 h-2.5 bg-theme-accent rounded-full animate-pulse" />
+              <span className="w-2.5 h-2.5 bg-[#f0c040] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+              <span className="w-2.5 h-2.5 bg-theme-accent rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+            </div>
+            <p className="text-theme-secondary text-sm">Rejoining room...</p>
           </div>
         )}
 
