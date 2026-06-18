@@ -142,7 +142,7 @@ io.use(async (socket, next) => {
     }
 
     // Verify Clerk session token
-    const decoded = await verifyToken(token);
+    const decoded = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
     const clerkId = decoded.sub;
 
     // Fetch user profile from database
