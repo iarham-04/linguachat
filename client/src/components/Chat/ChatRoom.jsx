@@ -74,8 +74,9 @@ export default function ChatRoom() {
     const handleUserJoined = (joinedUser) => {
       // Add a system message
       const { name: cName, avatar: pAvatar } = parseNameAndAvatar(joinedUser.name);
-      const isEmoji = pAvatar.length > 1 || pAvatar.charCodeAt(0) > 127;
-      const displayName = isEmoji ? `${pAvatar} ${cName}` : cName;
+      const avatarContent = joinedUser.avatar || pAvatar;
+      const isEmoji = avatarContent && (avatarContent.length > 1 || avatarContent.charCodeAt(0) > 127);
+      const displayName = isEmoji ? `${avatarContent} ${cName}` : cName;
 
       setMessages((prev) => [
         ...prev,
@@ -88,10 +89,11 @@ export default function ChatRoom() {
       ]);
     };
 
-    const handleUserLeft = ({ name }) => {
+    const handleUserLeft = ({ name, avatar }) => {
       const { name: cName, avatar: pAvatar } = parseNameAndAvatar(name);
-      const isEmoji = pAvatar.length > 1 || pAvatar.charCodeAt(0) > 127;
-      const displayName = isEmoji ? `${pAvatar} ${cName}` : cName;
+      const avatarContent = avatar || pAvatar;
+      const isEmoji = avatarContent && (avatarContent.length > 1 || avatarContent.charCodeAt(0) > 127);
+      const displayName = isEmoji ? `${avatarContent} ${cName}` : cName;
 
       setMessages((prev) => [
         ...prev,
@@ -183,11 +185,16 @@ export default function ChatRoom() {
   const isEmojiAvatar = parsedAvatar.length > 1 || parsedAvatar.charCodeAt(0) > 127;
 
   // Calculate header participants list
-  const otherUsers = users.filter((u) => u.name !== user?.name);
+  const otherUsers = users.filter((u) => {
+    const cleanU = parseNameAndAvatar(u.name).name;
+    const cleanMe = parseNameAndAvatar(user?.name).name;
+    return cleanU !== cleanMe;
+  });
   const otherUsersNames = otherUsers.map((u) => {
     const { name: cName, avatar: pAvatar } = parseNameAndAvatar(u.name);
-    const isEmoji = pAvatar.length > 1 || pAvatar.charCodeAt(0) > 127;
-    return isEmoji ? `${pAvatar} ${cName}` : cName;
+    const avatarContent = u.avatar || pAvatar;
+    const isEmoji = avatarContent && (avatarContent.length > 1 || avatarContent.charCodeAt(0) > 127);
+    return isEmoji ? `${avatarContent} ${cName}` : cName;
   });
 
   let participantsText = '';

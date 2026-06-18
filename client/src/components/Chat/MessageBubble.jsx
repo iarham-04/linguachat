@@ -15,7 +15,7 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
 
   const wasTranslated = !isOwn && message.translatedText !== message.originalText;
   const { name: cleanName, avatar: parsedAvatar } = parseNameAndAvatar(message.senderName);
-  const avatarContent = parsedAvatar || '?';
+  const avatarContent = message.senderAvatar || parsedAvatar || '?';
   const isEmojiAvatar = avatarContent.length > 1 || avatarContent.charCodeAt(0) > 127;
   
   const elapsed = Date.now() - message.timestamp;

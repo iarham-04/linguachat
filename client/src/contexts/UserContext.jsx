@@ -46,9 +46,10 @@ function ClerkUserProvider({ children }) {
         if (data.exists) {
           const userData = {
             id: data.user.clerk_id,
-            name: data.user.username,
+            name: `${data.user.avatar || '🐱'} ${data.user.username}`,
             lang: data.user.language,
             avatar: data.user.avatar,
+            email: data.user.email,
           };
           setUser(userData);
           setDbProfile(data.user);
@@ -83,9 +84,10 @@ function ClerkUserProvider({ children }) {
       if (data.success) {
         const userData = {
           id: data.user.clerk_id,
-          name: data.user.username,
+          name: `${data.user.avatar || '🐱'} ${data.user.username}`,
           lang: data.user.language,
           avatar: data.user.avatar,
+          email: data.user.email,
         };
         setUser(userData);
         setDbProfile(data.user);
@@ -143,6 +145,45 @@ function ClerkUserProvider({ children }) {
     await signOut();
   }, [signOut]);
 
+  const updateProfile = useCallback(async (newUsername, newAvatar) => {
+    if (!user) return { error: 'Not authenticated' };
+    const cleanUsername = newUsername.trim();
+    const cleanAvatar = newAvatar || user.avatar;
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/users/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          username: cleanUsername,
+          language: user.lang,
+          avatar: cleanAvatar
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const userData = {
+          id: data.user.clerk_id,
+          name: `${data.user.avatar || '🐱'} ${data.user.username}`,
+          lang: data.user.language,
+          avatar: data.user.avatar,
+          email: data.user.email,
+        };
+        setUser(userData);
+        setDbProfile(data.user);
+        return { success: true, user: userData };
+      } else {
+        return { error: data.error || 'Failed to update profile' };
+      }
+    } catch (err) {
+      console.error('[UserContext] Profile update error:', err);
+      return { error: 'Server connection error' };
+    }
+  }, [user, getToken]);
+
   return (
     <UserContext.Provider value={{ 
       user, 
@@ -152,6 +193,7 @@ function ClerkUserProvider({ children }) {
       leaveRoom, 
       logout, 
       changeLanguage, 
+      updateProfile,
       isLoadingProfile, 
       mustSetupProfile,
       isClerkActive: true
@@ -178,7 +220,14 @@ function BypassUserProvider({ children }) {
 
   const login = useCallback(async (userName, userLang, avatar) => {
     const userId = 'mock_' + userName.toLowerCase().trim();
-    const userData = { id: userId, name: userName, lang: userLang, avatar };
+    const cleanAvatar = avatar || '🐱';
+    const userData = { 
+      id: userId, 
+      name: `${cleanAvatar} ${userName}`, 
+      lang: userLang, 
+      avatar: cleanAvatar,
+      email: `${userId}@example.com`
+    };
     setUser(userData);
     sessionStorage.setItem('linguachat_user', JSON.stringify(userData));
     return { success: true };
@@ -210,6 +259,22 @@ function BypassUserProvider({ children }) {
     sessionStorage.removeItem('linguachat_room');
   }, []);
 
+  const updateProfile = useCallback(async (newUsername, newAvatar) => {
+    if (!user) return { error: 'Not logged in' };
+    const cleanUsername = newUsername.trim();
+    const cleanAvatar = newAvatar || user.avatar;
+    
+    const updated = {
+      ...user,
+      name: `${cleanAvatar} ${cleanUsername}`,
+      avatar: cleanAvatar,
+      email: `${user.id}@example.com`
+    };
+    setUser(updated);
+    sessionStorage.setItem('linguachat_user', JSON.stringify(updated));
+    return { success: true, user: updated };
+  }, [user]);
+
   return (
     <UserContext.Provider value={{ 
       user, 
@@ -219,6 +284,7 @@ function BypassUserProvider({ children }) {
       leaveRoom, 
       logout, 
       changeLanguage,
+      updateProfile,
       isLoadingProfile: false,
       mustSetupProfile: false,
       isClerkActive: false

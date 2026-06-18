@@ -39,6 +39,7 @@ function getRoomUsers(roomCode) {
     id: socketId,
     clerkId: user.clerkId,
     name: user.name,
+    avatar: user.avatar,
     lang: user.lang,
     langInfo: getLanguageInfo(user.lang),
   }));
@@ -123,6 +124,7 @@ function registerSocketHandlers(io, socket) {
       room.users.set(socket.id, {
         clerkId: creatorClerkId,
         name: socket.user.username,
+        avatar: socket.user.avatar,
         lang: socket.user.language,
         joinedAt: Date.now(),
       });
@@ -211,6 +213,7 @@ function registerSocketHandlers(io, socket) {
       room.users.set(socket.id, {
         clerkId: joiningClerkId,
         name: socket.user.username,
+        avatar: socket.user.avatar,
         lang: socket.user.language,
         joinedAt: Date.now(),
       });
@@ -227,7 +230,7 @@ function registerSocketHandlers(io, socket) {
         room.isNew = false;
       } else {
         const { rows } = await query(
-          `SELECT m.*, u.username as sender_name, u.language as sender_lang 
+          `SELECT m.*, u.username as sender_name, u.language as sender_lang, u.avatar as sender_avatar 
            FROM messages m 
            JOIN users u ON m.sender_id = u.clerk_id 
            WHERE m.room_code = $1 
@@ -247,6 +250,7 @@ function registerSocketHandlers(io, socket) {
           id: row.id,
           senderId: row.sender_id,
           senderName: row.sender_name,
+          senderAvatar: row.sender_avatar,
           senderLang: row.sender_lang,
           originalText: row.original_text,
           translatedText: translatedText,
@@ -269,6 +273,7 @@ function registerSocketHandlers(io, socket) {
         socket.to(code).emit('user-joined', {
           id: socket.id,
           name: socket.user.username,
+          avatar: socket.user.avatar,
           lang: socket.user.language,
           langInfo: getLanguageInfo(socket.user.language),
         });
@@ -318,6 +323,59 @@ function registerSocketHandlers(io, socket) {
     } catch (error) {
       console.error('[Socket] Error updating language:', error.message);
       socket.emit('error', { message: 'Failed to update language' });
+    }
+  });
+
+  // ── Update Profile ────────────────────────────────
+  socket.on('update-profile', async ({ username, avatar, roomCode }, callback) => {
+    try {
+      if (!username || !username.trim()) {
+        return callback ? callback({ error: 'Username is required' }) : null;
+      }
+      if (!avatar) {
+        return callback ? callback({ error: 'Avatar is required' }) : null;
+      }
+
+      const cleanName = username.trim();
+      const code = (roomCode || '').toUpperCase().trim();
+      const room = rooms.get(code);
+
+      if (!room || !room.users.has(socket.id)) {
+        return callback ? callback({ error: 'You are not in this room' }) : null;
+      }
+
+      // Check if username is already taken in the room by someone else
+      for (const [sid, u] of room.users) {
+        const emojiRegex = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g;
+        const match = u.name.match(emojiRegex);
+        let otherCleanName = u.name;
+        if (match && u.name.startsWith(match[0])) {
+          otherCleanName = u.name.substring(match[0].length).trim();
+        }
+        if (sid !== socket.id && otherCleanName.toLowerCase() === cleanName.toLowerCase()) {
+          return callback ? callback({ error: 'A user with this name is already in the room' }) : null;
+        }
+      }
+
+      const user = room.users.get(socket.id);
+      
+      // Update in-memory state
+      user.name = cleanName;
+      user.avatar = avatar;
+      socket.user.username = cleanName;
+      socket.user.avatar = avatar;
+      
+      // Update in DB
+      await query('UPDATE users SET username = $1, avatar = $2 WHERE clerk_id = $3', [cleanName, avatar, user.clerkId]);
+
+      console.log(`[Profile] ${user.clerkId} updated profile to ${avatar} ${cleanName} in ${code}`);
+
+      io.to(code).emit('room-users', { users: getRoomUsers(code) });
+
+      if (callback) callback({ success: true, name: user.name });
+    } catch (error) {
+      console.error('[Socket] Error updating profile:', error.message);
+      if (callback) callback({ error: 'Failed to update profile' });
     }
   });
 
@@ -378,6 +436,7 @@ function registerSocketHandlers(io, socket) {
         id: messageId,
         senderId: socket.user.clerkId,
         senderName: socket.user.username,
+        senderAvatar: socket.user.avatar,
         senderLang: socket.user.language,
         translatedText: encryptedOriginalText,
         originalText: encryptedOriginalText,
@@ -394,6 +453,7 @@ function registerSocketHandlers(io, socket) {
             id: messageId,
             senderId: socket.user.clerkId,
             senderName: socket.user.username,
+            senderAvatar: socket.user.avatar,
             senderLang: socket.user.language,
             translatedText: encryptedTranslatedText,
             originalText: encryptedOriginalText,
@@ -555,6 +615,7 @@ function registerSocketHandlers(io, socket) {
         socket.to(roomCode).emit('user-left', {
           id: socket.id,
           name: socket.user.username,
+          avatar: socket.user.avatar,
         });
 
         io.to(roomCode).emit('room-users', { users: getRoomUsers(roomCode) });
