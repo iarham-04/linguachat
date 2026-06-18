@@ -177,11 +177,45 @@ if (isProduction) {
   });
 }
 
+// ── Periodic Database Cleanup ─────────────────────
+function startDatabaseCleanup() {
+  const CLEANUP_INTERVAL = 60 * 60 * 1000; // Run every hour
+  
+  const runCleanup = async () => {
+    try {
+      console.log('[Cleanup] Running periodic database cleanup...');
+      
+      // Delete messages older than 24 hours
+      const msgRes = await query("DELETE FROM messages WHERE timestamp < NOW() - INTERVAL '24 hours'");
+      
+      // Delete rooms that have no messages and were created more than 24 hours ago
+      const roomRes = await query(`
+        DELETE FROM rooms 
+        WHERE created_at < NOW() - INTERVAL '24 hours'
+        AND code NOT IN (SELECT DISTINCT room_code FROM messages)
+      `);
+      
+      console.log(`[Cleanup] Removed ${msgRes.rowCount || 0} old messages and ${roomRes.rowCount || 0} empty rooms.`);
+    } catch (err) {
+      console.error('[Cleanup] Database cleanup failed:', err.message);
+    }
+  };
+
+  // Run immediately on boot
+  runCleanup();
+  
+  // Schedule periodically
+  setInterval(runCleanup, CLEANUP_INTERVAL);
+}
+
 // ── Boot Server ───────────────────────────────────
 async function startServer() {
   try {
     // Ensure DB tables exist
     await initDb();
+    
+    // Start periodic cleanup of chats/rooms older than 24 hours
+    startDatabaseCleanup();
     
     server.listen(PORT, () => {
       console.log('');
