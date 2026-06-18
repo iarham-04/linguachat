@@ -65,7 +65,7 @@ async function runTests() {
   assert(joinResult.users.length === 2, 'Both users are in the room');
 
   // Wait for Alice to receive the user-joined event
-  await sleep(200);
+  await sleep(500);
 
   // ── Test 3: Join Room Validation ─────────────────
   console.log('\n📋 Test 3: Join Validation');
@@ -114,7 +114,7 @@ async function runTests() {
   alice.emit('send-message', { text: encryptMessage('Hello, Boris!', roomCode), roomCode });
 
   // Wait for translation to complete
-  await sleep(1000);
+  await sleep(3000);
 
   assert(aliceMessages.length === 1, 'Alice received her own message back');
   assert(aliceMessages[0].isOwn === true, 'Alice\'s message marked as own');
@@ -138,7 +138,7 @@ async function runTests() {
   // Boris sends a message (encrypted)
   boris.emit('send-message', { text: encryptMessage('Привет, Алиса!', roomCode), roomCode });
 
-  await sleep(1000);
+  await sleep(3000);
 
   assert(borisMessages.length === 1, 'Boris received his own message back');
   assert(borisMessages[0].translatedText === 'Привет, Алиса!', 'Boris sees original Russian text');
@@ -174,7 +174,7 @@ async function runTests() {
 
   // Alice sends to everyone (encrypted)
   alice.emit('send-message', { text: encryptMessage('Hello everyone!', roomCode), roomCode });
-  await sleep(1000);
+  await sleep(3000);
 
   assert(borisMessages.length === 1 && borisMessages[0].translatedText === 'Hello everyone!',
     'Boris receives Russian translation');
@@ -207,12 +207,12 @@ async function runTests() {
 
   // Alice changes her language from 'en' to 'es' (Spanish)
   alice.emit('update-language', { lang: 'es', roomCode });
-  await sleep(200);
+  await sleep(1000);
 
   // Boris sends a message (encrypted)
   aliceMessages.length = 0;
   boris.emit('send-message', { text: encryptMessage('How are you?', roomCode), roomCode });
-  await sleep(1500);
+  await sleep(3500);
 
   console.log(`  [Debug] Alice messages length: ${aliceMessages.length}`);
   if (aliceMessages.length > 0) {

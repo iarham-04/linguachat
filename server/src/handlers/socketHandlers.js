@@ -1,27 +1,26 @@
 /**
- * Socket.io Event Handlers
+ * Socket.io Event Handlers — PostgreSQL Backed
  * 
- * Manages all real-time chat events: room creation/joining,
- * message sending with translation, and user presence.
+ * Manages real-time room operations, client-side encryption propagation,
+ * translations storage, and user status syncing with DB persistence.
  */
 
 const { v4: uuidv4 } = require('uuid');
 const { translateForRecipients } = require('../services/translationService');
-const { saveRoom, saveMessage } = require('../config/firebase');
 const { isValidLanguage, getLanguageInfo } = require('../utils/languages');
 const { encryptMessage, decryptMessage } = require('../utils/crypto');
+const { query } = require('../config/db');
 
 const EDIT_TIME_LIMIT = 2 * 60 * 1000; // 2 minutes
 
-// ── In-Memory Storage ─────────────────────────────
-// Map<roomCode, { users: Map<socketId, userInfo>, messages: [] }>
+// In-memory presence tracker: Map<roomCode, { users: Map<socketId, userInfo>, createdAt: number }>
 const rooms = new Map();
 
 /**
- * Generate a 6-character room code
+ * Generate a unique 6-character room code
  */
 function generateRoomCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed ambiguous chars
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -30,7 +29,7 @@ function generateRoomCode() {
 }
 
 /**
- * Get sanitized user list for a room (safe for client consumption)
+ * Get sanitized user list for an active room (safe for client consumption)
  */
 function getRoomUsers(roomCode) {
   const room = rooms.get(roomCode);
@@ -38,6 +37,7 @@ function getRoomUsers(roomCode) {
 
   return Array.from(room.users.entries()).map(([socketId, user]) => ({
     id: socketId,
+    clerkId: user.clerkId,
     name: user.name,
     lang: user.lang,
     langInfo: getLanguageInfo(user.lang),
@@ -45,13 +45,37 @@ function getRoomUsers(roomCode) {
 }
 
 /**
- * Register all socket event handlers
+ * Helper to sync or register a mock user profile in DB (for BYPASS_AUTH mode)
  */
+async function syncBypassUser(socket, userName, userLang) {
+  if (socket.user) return socket.user.clerkId;
+
+  const socketSuffix = socket.id.replace(/[^a-zA-Z0-9]/g, '').substring(0, 6);
+  const mockId = `mock_${userName.toLowerCase().trim()}_${socketSuffix}`;
+  const { rows } = await query(
+    `INSERT INTO users (clerk_id, username, email, language, avatar) 
+     VALUES ($1, $2, $3, $4, $5) 
+     ON CONFLICT (clerk_id) 
+     DO UPDATE SET username = $2, language = $4 
+     RETURNING *`,
+    [mockId, userName.trim(), `${mockId}@example.com`, userLang, '🐱']
+  );
+
+  socket.user = {
+    clerkId: rows[0].clerk_id,
+    username: rows[0].username,
+    language: rows[0].language,
+    avatar: rows[0].avatar
+  };
+
+  return rows[0].clerk_id;
+}
+
 function registerSocketHandlers(io, socket) {
-  console.log(`[Socket] User connected: ${socket.id}`);
+  console.log(`[Socket] Connected: ${socket.id}`);
 
   // ── Create Room ───────────────────────────────────
-  socket.on('create-room', ({ userId, userName, userLang }, callback) => {
+  socket.on('create-room', async ({ userName, userLang }, callback) => {
     try {
       if (!userName || !userName.trim()) {
         return callback({ error: 'Display name is required' });
@@ -60,38 +84,44 @@ function registerSocketHandlers(io, socket) {
         return callback({ error: 'Invalid language selection' });
       }
 
-      // Generate unique room code
-      let roomCode;
-      do {
-        roomCode = generateRoomCode();
-      } while (rooms.has(roomCode));
+      // Sync user profile if in bypass mode
+      const creatorClerkId = await syncBypassUser(socket, userName, userLang);
 
-      // Create room
+      // Generate unique room code and verify in DB
+      let roomCode;
+      let isUnique = false;
+      while (!isUnique) {
+        roomCode = generateRoomCode();
+        const { rows } = await query('SELECT 1 FROM rooms WHERE code = $1', [roomCode]);
+        if (rows.length === 0) {
+          isUnique = true;
+        }
+      }
+
+      // Insert room into PostgreSQL database
+      await query(
+        'INSERT INTO rooms (code, host_id) VALUES ($1, $2)',
+        [roomCode, creatorClerkId]
+      );
+
+      // Initialize room in-memory for socket tracking
       rooms.set(roomCode, {
         users: new Map(),
-        messages: [],
         createdAt: Date.now(),
-        createdBy: userName.trim(),
       });
 
-      // Add creator to the room
       const room = rooms.get(roomCode);
       room.users.set(socket.id, {
-        id: userId,
-        name: userName.trim(),
-        lang: userLang,
+        clerkId: creatorClerkId,
+        name: socket.user.username,
+        lang: socket.user.language,
         joinedAt: Date.now(),
       });
 
       socket.join(roomCode);
       socket.roomCode = roomCode;
-      socket.userName = userName.trim();
-      socket.userLang = userLang;
 
-      // Persist to Firebase (optional)
-      saveRoom(roomCode, { createdBy: userName.trim(), maxUsers: 4 });
-
-      console.log(`[Room] Created room ${roomCode} by ${userName} (${userLang})`);
+      console.log(`[Room] Created ${roomCode} by ${socket.user.username} (DB Backed)`);
 
       callback({
         success: true,
@@ -99,16 +129,15 @@ function registerSocketHandlers(io, socket) {
         users: getRoomUsers(roomCode),
       });
 
-      // Broadcast user list update to the room
       io.to(roomCode).emit('room-users', { users: getRoomUsers(roomCode) });
     } catch (error) {
-      console.error('[Socket] Error creating room:', error);
+      console.error('[Socket] Error creating room:', error.message);
       callback({ error: 'Failed to create room' });
     }
   });
 
   // ── Join Room ─────────────────────────────────────
-  socket.on('join-room', ({ roomCode, userId, userName, userLang }, callback) => {
+  socket.on('join-room', async ({ roomCode, userName, userLang }, callback) => {
     try {
       if (!userName || !userName.trim()) {
         return callback({ error: 'Display name is required' });
@@ -118,76 +147,119 @@ function registerSocketHandlers(io, socket) {
       }
 
       const code = (roomCode || '').toUpperCase().trim();
-      const room = rooms.get(code);
 
-      if (!room) {
+      // Check if room exists and is active in database
+      const { rows: roomRows } = await query(
+        'SELECT * FROM rooms WHERE code = $1 AND active = true',
+        [code]
+      );
+      if (roomRows.length === 0) {
         return callback({ error: 'Room not found. Please check the room code.' });
       }
 
-      // Check for duplicate names in the room, ignoring if it is the same user re-joining (by userId or socketId)
+      // Sync user profile if in bypass mode
+      const joiningClerkId = await syncBypassUser(socket, userName, userLang);
+
+      // Initialize in-memory presence room if server restarted
+      let room = rooms.get(code);
+      if (!room) {
+        room = {
+          users: new Map(),
+          createdAt: Date.now(),
+        };
+        rooms.set(code, room);
+      }
+
+      // Handle rejoining duplicates
       const socketsToRemove = [];
-      for (const [socketId, u] of room.users) {
-        const isSameUser = (u.id && u.id === userId) || socketId === socket.id;
+      for (const [sid, u] of room.users) {
+        const isSameUser = u.clerkId === joiningClerkId || sid === socket.id;
         if (isSameUser) {
-          socketsToRemove.push(socketId);
+          socketsToRemove.push(sid);
         } else if (u.name.toLowerCase() === userName.trim().toLowerCase()) {
           return callback({ error: 'A user with this name is already in the room' });
         }
       }
 
-      // Check capacity, but subtract if we are replacing ourselves
+      // Capacity verification
       const effectiveSize = room.users.size - socketsToRemove.length;
       if (effectiveSize >= 4) {
         return callback({ error: 'Room is full (max 4 users)' });
       }
 
-      // Remove the old socket entries (if any)
+      // Remove replaced client socket entries
       for (const sid of socketsToRemove) {
         room.users.delete(sid);
       }
 
-      // Add user to room
+      // Save new client socket entry
       room.users.set(socket.id, {
-        id: userId,
-        name: userName.trim(),
-        lang: userLang,
+        clerkId: joiningClerkId,
+        name: socket.user.username,
+        lang: socket.user.language,
         joinedAt: Date.now(),
       });
 
       socket.join(code);
       socket.roomCode = code;
-      socket.userName = userName.trim();
-      socket.userLang = userLang;
 
-      console.log(`[Room] ${userName} (${userLang}) joined room ${code}`);
+      console.log(`[Room] ${socket.user.username} joined room ${code}`);
 
-      // Send room state to the joining user
+      // Query last 50 room messages from PostgreSQL
+      const { rows: dbMessages } = await query(
+        `SELECT m.*, u.username as sender_name, u.language as sender_lang 
+         FROM messages m 
+         JOIN users u ON m.sender_id = u.clerk_id 
+         WHERE m.room_code = $1 
+         ORDER BY m.timestamp ASC LIMIT 50`,
+        [code]
+      );
+
+      // Format message history mapping translations correctly
+      const historyMessages = dbMessages.map((row) => {
+        const translations = row.translations || {};
+        const receiverLang = socket.user.language;
+        const translatedText = translations[receiverLang] || row.original_text;
+
+        return {
+          id: row.id,
+          senderId: row.sender_id,
+          senderName: row.sender_name,
+          senderLang: row.sender_lang,
+          originalText: row.original_text,
+          translatedText: translatedText,
+          timestamp: new Date(row.timestamp).getTime(),
+          isEdited: row.is_edited,
+          isUnsent: row.is_unsent,
+          isOwn: row.sender_id === joiningClerkId,
+        };
+      });
+
       callback({
         success: true,
         roomCode: code,
         users: getRoomUsers(code),
-        messages: room.messages.slice(-50), // Last 50 messages
+        messages: historyMessages,
       });
 
-      // Notify others in the room (only if they are joining for the first time, not reconnecting)
+      // Notify others in room
       if (socketsToRemove.length === 0) {
         socket.to(code).emit('user-joined', {
           id: socket.id,
-          name: userName.trim(),
-          lang: userLang,
-          langInfo: getLanguageInfo(userLang),
+          name: socket.user.username,
+          lang: socket.user.language,
+          langInfo: getLanguageInfo(socket.user.language),
         });
       }
 
-      // Broadcast updated user list
       io.to(code).emit('room-users', { users: getRoomUsers(code) });
     } catch (error) {
-      console.error('[Socket] Error joining room:', error);
+      console.error('[Socket] Error joining room:', error.message);
       callback({ error: 'Failed to join room' });
     }
   });
 
-  // ── Request Room Users (on-demand refresh) ────────
+  // ── Request Room Users ────────────────────────────
   socket.on('request-room-users', ({ roomCode }) => {
     const code = (roomCode || '').toUpperCase().trim();
     if (rooms.has(code)) {
@@ -196,7 +268,7 @@ function registerSocketHandlers(io, socket) {
   });
 
   // ── Update Language ───────────────────────────────
-  socket.on('update-language', ({ lang, roomCode }) => {
+  socket.on('update-language', async ({ lang, roomCode }) => {
     try {
       if (!isValidLanguage(lang)) {
         return socket.emit('error', { message: 'Invalid language selection' });
@@ -210,16 +282,19 @@ function registerSocketHandlers(io, socket) {
       }
 
       const user = room.users.get(socket.id);
-      const oldLang = user.lang;
+      
+      // Update in-memory state immediately to avoid race conditions with concurrent socket events
       user.lang = lang;
-      socket.userLang = lang;
+      socket.user.language = lang;
+      
+      // Update in DB
+      await query('UPDATE users SET language = $1 WHERE clerk_id = $2', [lang, user.clerkId]);
 
-      console.log(`[Language] ${user.name} in ${code} changed language from ${oldLang} to ${lang}`);
+      console.log(`[Language] ${socket.user.username} updated language to ${lang} in ${code}`);
 
-      // Broadcast updated user list to everyone
       io.to(code).emit('room-users', { users: getRoomUsers(code) });
     } catch (error) {
-      console.error('[Socket] Error updating language:', error);
+      console.error('[Socket] Error updating language:', error.message);
       socket.emit('error', { message: 'Failed to update language' });
     }
   });
@@ -233,23 +308,21 @@ function registerSocketHandlers(io, socket) {
       const room = rooms.get(code);
 
       if (!room || !room.users.has(socket.id)) {
-        socket.emit('error', { message: 'You are not in this room' });
-        return;
+        return socket.emit('error', { message: 'You are not in this room' });
       }
 
-      // Decrypt incoming message
+      console.log(`[Debug SendMessage] Sender: ${socket.id} (${socket.user.username}), Room: ${code}, Users in room: ${Array.from(room.users.entries()).map(([sid, u]) => `${sid} (${u.name})`).join(', ')}`);
+
       const decryptedText = decryptMessage(text, code);
       if (!decryptedText || !decryptedText.trim()) return;
 
-      const sender = room.users.get(socket.id);
-      const messageId = uuidv4();
-      const timestamp = Date.now();
       const originalText = decryptedText.trim();
+      const timestamp = Date.now();
+      const messageId = uuidv4();
 
-      // Notify room that translation is in progress
-      socket.to(code).emit('translating', { senderName: sender.name });
+      socket.to(code).emit('translating', { senderName: socket.user.username });
 
-      // Collect unique recipient languages (excluding sender's own language)
+      // Gather recipient languages
       const recipientLangs = [];
       for (const [sid, user] of room.users) {
         if (sid !== socket.id) {
@@ -257,64 +330,49 @@ function registerSocketHandlers(io, socket) {
         }
       }
 
-      // Translate for all unique recipient languages
+      // Translate per recipient language
       const translations = await translateForRecipients(
         originalText,
-        sender.lang,
+        socket.user.language,
         recipientLangs
       );
 
-      // Encrypt original and translated text for storage
+      // Encrypt payloads for database and propagation
       const encryptedOriginalText = encryptMessage(originalText, code);
       const encryptedTranslations = {};
       for (const lang in translations) {
         encryptedTranslations[lang] = encryptMessage(translations[lang], code);
       }
 
-      // Build the full message object for storage (all text is encrypted)
-      const messageData = {
-        id: messageId,
-        senderId: socket.id,
-        senderName: sender.name,
-        senderLang: sender.lang,
-        originalText: encryptedOriginalText,
-        translations: encryptedTranslations,
-        timestamp,
-      };
+      // Persist to PostgreSQL database
+      await query(
+        `INSERT INTO messages (id, room_code, sender_id, original_text, translations, timestamp) 
+         VALUES ($1, $2, $3, $4, $5, to_timestamp($6 / 1000.0))`,
+        [messageId, code, socket.user.clerkId, encryptedOriginalText, encryptedTranslations, timestamp]
+      );
 
-      // Store in room's in-memory history
-      room.messages.push(messageData);
-
-      // Keep only the last 100 messages in memory
-      if (room.messages.length > 100) {
-        room.messages = room.messages.slice(-100);
-      }
-
-      // Persist to Firebase (optional)
-      saveMessage(code, messageData);
-
-      // Send the encrypted message back to the sender
+      // Send confirmation to sender
       socket.emit('receive-message', {
         id: messageId,
-        senderId: socket.id,
-        senderName: sender.name,
-        senderLang: sender.lang,
-        translatedText: encryptedOriginalText, // Sender sees original
+        senderId: socket.user.clerkId,
+        senderName: socket.user.username,
+        senderLang: socket.user.language,
+        translatedText: encryptedOriginalText,
         originalText: encryptedOriginalText,
         isOwn: true,
         timestamp,
       });
 
-      // Send encrypted translated messages to each recipient
+      // Broadcast to individual clients
       for (const [sid, user] of room.users) {
         if (sid !== socket.id) {
           const translatedText = translations[user.lang] || originalText;
           const encryptedTranslatedText = encryptMessage(translatedText, code);
           io.to(sid).emit('receive-message', {
             id: messageId,
-            senderId: socket.id,
-            senderName: sender.name,
-            senderLang: sender.lang,
+            senderId: socket.user.clerkId,
+            senderName: socket.user.username,
+            senderLang: socket.user.language,
             translatedText: encryptedTranslatedText,
             originalText: encryptedOriginalText,
             isOwn: false,
@@ -323,9 +381,9 @@ function registerSocketHandlers(io, socket) {
         }
       }
 
-      console.log(`[Message] ${sender.name} in ${code}: [Encrypted Message] → translated and encrypted for ${Object.keys(translations).join(', ')}`);
+      console.log(`[Message] ${socket.user.username} in ${code}: [Stored & Dispatched]`);
     } catch (error) {
-      console.error('[Socket] Error sending message:', error);
+      console.error('[Socket] Error sending message:', error.message);
       socket.emit('error', { message: 'Failed to send message' });
     }
   });
@@ -343,33 +401,31 @@ function registerSocketHandlers(io, socket) {
         return;
       }
 
-      // Find message index
-      const messageIndex = room.messages.findIndex(m => m.id === messageId);
-      if (messageIndex === -1) {
+      // Query message from DB
+      const { rows } = await query('SELECT * FROM messages WHERE id = $1', [messageId]);
+      if (rows.length === 0) {
         if (callback) callback({ error: 'Message not found' });
         return;
       }
 
-      const message = room.messages[messageIndex];
-      if (message.senderId !== socket.id) {
+      const message = rows[0];
+      if (message.sender_id !== socket.user.clerkId) {
         if (callback) callback({ error: 'You can only edit your own messages' });
         return;
       }
 
-      const elapsed = Date.now() - message.timestamp;
+      const elapsed = Date.now() - new Date(message.timestamp).getTime();
       if (elapsed > EDIT_TIME_LIMIT) {
         if (callback) callback({ error: 'Time limit for editing has expired' });
         return;
       }
 
-      // Decrypt incoming message
       const decryptedText = decryptMessage(text, code);
       if (!decryptedText || !decryptedText.trim()) return;
 
       const originalText = decryptedText.trim();
-      const sender = room.users.get(socket.id);
 
-      // Collect recipient languages
+      // Gather recipient languages
       const recipientLangs = [];
       for (const [sid, user] of room.users) {
         if (sid !== socket.id) {
@@ -377,25 +433,27 @@ function registerSocketHandlers(io, socket) {
         }
       }
 
-      // Translate updated text
       const translations = await translateForRecipients(
         originalText,
-        sender.lang,
+        socket.user.language,
         recipientLangs
       );
 
-      // Encrypt and update
       const encryptedOriginalText = encryptMessage(originalText, code);
       const encryptedTranslations = {};
       for (const lang in translations) {
         encryptedTranslations[lang] = encryptMessage(translations[lang], code);
       }
 
-      message.originalText = encryptedOriginalText;
-      message.translations = encryptedTranslations;
-      message.isEdited = true;
+      // Update in Database
+      await query(
+        `UPDATE messages 
+         SET original_text = $1, translations = $2, is_edited = true 
+         WHERE id = $3`,
+        [encryptedOriginalText, encryptedTranslations, messageId]
+      );
 
-      // Broadcast message-edited to everyone with their translations
+      // Broadcast changes to active room clients
       for (const [sid, user] of room.users) {
         const isSelf = sid === socket.id;
         const translatedText = isSelf ? originalText : (translations[user.lang] || originalText);
@@ -410,13 +468,13 @@ function registerSocketHandlers(io, socket) {
 
       if (callback) callback({ success: true });
     } catch (error) {
-      console.error('[Socket] Error editing message:', error);
+      console.error('[Socket] Error editing message:', error.message);
       if (callback) callback({ error: 'Failed to edit message' });
     }
   });
 
   // ── Unsend Message ────────────────────────────────
-  socket.on('unsend-message', ({ messageId, roomCode }, callback) => {
+  socket.on('unsend-message', async ({ messageId, roomCode }, callback) => {
     try {
       const code = (roomCode || '').toUpperCase().trim();
       const room = rooms.get(code);
@@ -426,34 +484,34 @@ function registerSocketHandlers(io, socket) {
         return;
       }
 
-      // Find message index
-      const messageIndex = room.messages.findIndex(m => m.id === messageId);
-      if (messageIndex === -1) {
+      // Query message from DB
+      const { rows } = await query('SELECT * FROM messages WHERE id = $1', [messageId]);
+      if (rows.length === 0) {
         if (callback) callback({ error: 'Message not found' });
         return;
       }
 
-      const message = room.messages[messageIndex];
-      if (message.senderId !== socket.id) {
+      const message = rows[0];
+      if (message.sender_id !== socket.user.clerkId) {
         if (callback) callback({ error: 'You can only unsend your own messages' });
         return;
       }
 
-      const elapsed = Date.now() - message.timestamp;
+      const elapsed = Date.now() - new Date(message.timestamp).getTime();
       if (elapsed > EDIT_TIME_LIMIT) {
         if (callback) callback({ error: 'Time limit for unsending has expired' });
         return;
       }
 
-      // Remove from history
-      room.messages.splice(messageIndex, 1);
+      // Delete from Database
+      await query('DELETE FROM messages WHERE id = $1', [messageId]);
 
-      // Broadcast message-unsent
+      // Broadcast unsend trigger
       io.to(code).emit('message-unsent', { id: messageId });
 
       if (callback) callback({ success: true });
     } catch (error) {
-      console.error('[Socket] Error unsending message:', error);
+      console.error('[Socket] Error unsending message:', error.message);
       if (callback) callback({ error: 'Failed to unsend message' });
     }
   });
@@ -469,30 +527,29 @@ function registerSocketHandlers(io, socket) {
       if (isRegistered) {
         room.users.delete(socket.id);
 
-        console.log(`[Room] ${socket.userName} left room ${roomCode}`);
+        console.log(`[Room] ${socket.user.username} left room ${roomCode}`);
 
         // Notify others
         socket.to(roomCode).emit('user-left', {
           id: socket.id,
-          name: socket.userName,
+          name: socket.user.username,
         });
 
-        // Update user list
         io.to(roomCode).emit('room-users', { users: getRoomUsers(roomCode) });
 
-        // Clean up empty rooms after a delay
+        // Gracefully clean up active room presence after a delay
         if (room.users.size === 0) {
           setTimeout(() => {
             if (rooms.has(roomCode) && rooms.get(roomCode).users.size === 0) {
               rooms.delete(roomCode);
-              console.log(`[Room] Deleted empty room ${roomCode}`);
+              console.log(`[Room] Deleted in-memory active space ${roomCode}`);
             }
-          }, 60000); // 1 minute grace period
+          }, 60000);
         }
       }
     }
 
-    console.log(`[Socket] User disconnected: ${socket.id}`);
+    console.log(`[Socket] Disconnected: ${socket.id}`);
   });
 }
 

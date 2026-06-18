@@ -1,47 +1,135 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { SERVER_URL } from '../utils/constants';
+import { useUser } from './UserContext';
+import { useAuth } from '@clerk/clerk-react';
 
 const SocketContext = createContext(null);
 
-export function SocketProvider({ children }) {
+// ── Clerk Handshake Socket Provider ────────────────
+function ClerkSocketProvider({ children }) {
+  const { user } = useUser();
+  const { getToken } = useAuth();
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const newSocket = io(SERVER_URL, {
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-    });
+    if (!user) {
+      if (socket) {
+        socket.close();
+        setSocket(null);
+        setIsConnected(false);
+      }
+      return;
+    }
 
-    newSocket.on('connect', () => {
-      console.log('[Socket] Connected:', newSocket.id);
-      setIsConnected(true);
-    });
+    let activeSocket = null;
 
-    newSocket.on('disconnect', () => {
-      console.log('[Socket] Disconnected');
-      setIsConnected(false);
-    });
+    const establishConnection = async () => {
+      try {
+        const token = await getToken();
+        
+        activeSocket = io(SERVER_URL, {
+          autoConnect: true,
+          reconnection: true,
+          reconnectionAttempts: 10,
+          reconnectionDelay: 1000,
+          auth: { token }
+        });
 
-    newSocket.on('connect_error', (err) => {
-      console.error('[Socket] Connection error:', err.message);
-      setIsConnected(false);
-    });
+        activeSocket.on('connect', () => {
+          setIsConnected(true);
+        });
 
-    setSocket(newSocket);
+        activeSocket.on('disconnect', () => {
+          setIsConnected(false);
+        });
+
+        activeSocket.on('connect_error', (err) => {
+          console.error('[Socket] Connection error:', err.message);
+          setIsConnected(false);
+        });
+
+        setSocket(activeSocket);
+      } catch (err) {
+        console.error('[Socket] Failed to resolve auth token:', err.message);
+      }
+    };
+
+    establishConnection();
 
     return () => {
-      newSocket.close();
+      if (activeSocket) {
+        activeSocket.close();
+      }
     };
-  }, []);
+  }, [user, getToken]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>
       {children}
     </SocketContext.Provider>
+  );
+}
+
+// ── Local Bypass Handshake Socket Provider ──────────
+function BypassSocketProvider({ children }) {
+  const { user } = useUser();
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      if (socket) {
+        socket.close();
+        setSocket(null);
+        setIsConnected(false);
+      }
+      return;
+    }
+
+    const activeSocket = io(SERVER_URL, {
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      auth: { userId: user.id }
+    });
+
+    activeSocket.on('connect', () => {
+      setIsConnected(true);
+    });
+
+    activeSocket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
+    activeSocket.on('connect_error', (err) => {
+      console.error('[Socket] Connection error:', err.message);
+      setIsConnected(false);
+    });
+
+    setSocket(activeSocket);
+
+    return () => {
+      activeSocket.close();
+    };
+  }, [user]);
+
+  return (
+    <SocketContext.Provider value={{ socket, isConnected }}>
+      {children}
+    </SocketContext.Provider>
+  );
+}
+
+export function SocketProvider({ children }) {
+  const { isClerkActive } = useUser();
+  
+  return isClerkActive ? (
+    <ClerkSocketProvider>{children}</ClerkSocketProvider>
+  ) : (
+    <BypassSocketProvider>{children}</BypassSocketProvider>
   );
 }
 

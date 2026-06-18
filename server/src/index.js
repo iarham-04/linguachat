@@ -14,6 +14,8 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const { initFirebase } = require('./config/firebase');
 const { registerSocketHandlers } = require('./handlers/socketHandlers');
+const { initDb, query } = require('./config/db');
+const { ClerkExpressWithAuth, clerkClient, verifyToken } = require('@clerk/clerk-sdk-node');
 
 // ── Configuration ─────────────────────────────────
 const PORT = process.env.PORT || 3001;
@@ -39,6 +41,79 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Authentication middleware wrapper with BYPASS_AUTH support
+function optionalClerkAuth(req, res, next) {
+  if (process.env.BYPASS_AUTH === 'true') {
+    const mockUser = req.headers['x-mock-user'] || 'mock_alice';
+    req.auth = { userId: mockUser };
+    return next();
+  }
+  ClerkExpressWithAuth()(req, res, next);
+}
+
+// Get current user profile from DB
+app.get('/api/users/me', optionalClerkAuth, async (req, res) => {
+  try {
+    if (!req.auth || !req.auth.userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const { rows } = await query('SELECT * FROM users WHERE clerk_id = $1', [req.auth.userId]);
+    if (rows.length > 0) {
+      return res.json({ exists: true, user: rows[0] });
+    }
+    return res.json({ exists: false });
+  } catch (error) {
+    console.error('[API] Error getting user profile:', error.message);
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Create/Update user profile
+app.post('/api/users/profile', optionalClerkAuth, async (req, res) => {
+  try {
+    if (!req.auth || !req.auth.userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const { username, language, avatar } = req.body;
+    if (!username || !username.trim()) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+    if (!language) {
+      return res.status(400).json({ error: 'Language is required' });
+    }
+    if (!avatar) {
+      return res.status(400).json({ error: 'Avatar is required' });
+    }
+
+    // Resolve email (mocked for bypass, otherwise fetched from Clerk API)
+    let email = 'mock@example.com';
+    if (process.env.BYPASS_AUTH !== 'true') {
+      try {
+        const clerkUser = await clerkClient.users.getUser(req.auth.userId);
+        email = clerkUser.emailAddresses[0]?.emailAddress || '';
+      } catch (clerkErr) {
+        console.warn('[Clerk] Failed to get email address, fallback to placeholder:', clerkErr.message);
+      }
+    } else {
+      email = `${req.auth.userId}@example.com`;
+    }
+
+    const { rows } = await query(
+      `INSERT INTO users (clerk_id, username, email, language, avatar) 
+       VALUES ($1, $2, $3, $4, $5) 
+       ON CONFLICT (clerk_id) 
+       DO UPDATE SET username = $2, language = $4, avatar = $5 
+       RETURNING *`,
+      [req.auth.userId, username.trim(), email, language, avatar]
+    );
+
+    return res.json({ success: true, user: rows[0] });
+  } catch (error) {
+    console.error('[API] Error syncing user profile:', error.message);
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // ── HTTP Server + Socket.io ───────────────────────
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -50,10 +125,46 @@ const io = new Server(server, {
   },
 });
 
-// ── Initialize Services ───────────────────────────
+// ── Initialize Services & Sockets ─────────────────
 initFirebase();
 
-// ── Socket.io Connection Handler ──────────────────
+// Socket.io Clerk token authentication middleware
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    
+    if (process.env.BYPASS_AUTH === 'true') {
+      return next();
+    }
+
+    if (!token) {
+      return next(new Error('Authentication token required'));
+    }
+
+    // Verify Clerk session token
+    const decoded = await verifyToken(token);
+    const clerkId = decoded.sub;
+
+    // Fetch user profile from database
+    const { rows } = await query('SELECT * FROM users WHERE clerk_id = $1', [clerkId]);
+    if (rows.length === 0) {
+      return next(new Error('User profile not set up'));
+    }
+
+    const user = rows[0];
+    socket.user = {
+      clerkId: user.clerk_id,
+      username: user.username,
+      language: user.language,
+      avatar: user.avatar
+    };
+    return next();
+  } catch (err) {
+    console.error('[Socket Auth] Verification failed:', err.message);
+    return next(new Error('Authentication failed'));
+  }
+});
+
 io.on('connection', (socket) => {
   registerSocketHandlers(io, socket);
 });
@@ -66,16 +177,28 @@ if (isProduction) {
   });
 }
 
-// ── Start Server ──────────────────────────────────
-server.listen(PORT, () => {
-  console.log('');
-  console.log('  🌐 ─────────────────────────────────────────');
-  console.log('  │                                           │');
-  console.log(`  │   LinguaChat Server running on port ${PORT}   │`);
-  console.log('  │                                           │');
-  console.log(`  │   Translation: ${(process.env.TRANSLATION_PROVIDER || 'mock').padEnd(24)}│`);
-  console.log(`  │   Firebase:    ${process.env.FIREBASE_PROJECT_ID ? 'enabled'.padEnd(24) : 'disabled (in-memory)'.padEnd(24)}│`);
-  console.log('  │                                           │');
-  console.log('  ─────────────────────────────────────────────');
-  console.log('');
-});
+// ── Boot Server ───────────────────────────────────
+async function startServer() {
+  try {
+    // Ensure DB tables exist
+    await initDb();
+    
+    server.listen(PORT, () => {
+      console.log('');
+      console.log('  🌐 ─────────────────────────────────────────');
+      console.log('  │                                           │');
+      console.log(`  │   LinguaChat Server running on port ${PORT}   │`);
+      console.log('  │                                           │');
+      console.log(`  │   Translation: ${(process.env.TRANSLATION_PROVIDER || 'mock').padEnd(24)}│`);
+      console.log(`  │   Firebase:    ${process.env.FIREBASE_PROJECT_ID ? 'enabled'.padEnd(24) : 'disabled (in-memory)'.padEnd(24)}│`);
+      console.log('  │                                           │');
+      console.log('  ─────────────────────────────────────────────');
+      console.log('');
+    });
+  } catch (err) {
+    console.error('[Server] Startup failed:', err.message);
+    process.exit(1);
+  }
+}
+
+startServer();
