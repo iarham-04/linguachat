@@ -16,3 +16,11 @@ services:
         value: mock
       - key: PORT
         value: 10000
+      - key: DATABASE_URL
+        value: "postgresql://neondb_owner:REDACTED@ep-round-brook-ahx9w7yv-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+      - key: CLERK_SECRET_KEY
+        value: "REDACTED"
+      - key: CLERK_PUBLISHABLE_KEY
+        value: "pk_test_Y3V0ZS11bmljb3JuLTEzLmNsZXJrLmFjY291bnRzLmRldiQ"
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        value: "pk_test_Y3V0ZS11bmljb3JuLTEzLmNsZXJrLmFjY291bnRzLmRldiQ"
