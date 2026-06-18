@@ -15,6 +15,9 @@ if (!connectionString) {
 // Initialize PostgreSQL Pool
 const pool = new Pool({
   connectionString,
+  max: 10,
+  idleTimeoutMillis: 300000, // Keep idle connections open for 5 minutes
+  connectionTimeoutMillis: 10000, // Limit connection wait time to 10 seconds
   ssl: {
     rejectUnauthorized: false // Required for Neon connection
   }
@@ -64,6 +67,11 @@ async function initDb() {
         is_edited BOOLEAN DEFAULT FALSE,
         is_unsent BOOLEAN DEFAULT FALSE
       );
+    `);
+
+    // 4. Create performance indexes for message lookups
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_messages_room_code_timestamp ON messages (room_code, timestamp);
     `);
 
     console.log('[Database] Migration complete. All tables verified.');

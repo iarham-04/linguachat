@@ -87,27 +87,36 @@ function registerSocketHandlers(io, socket) {
       // Sync user profile if in bypass mode
       const creatorClerkId = await syncBypassUser(socket, userName, userLang);
 
-      // Generate unique room code and verify in DB
+      // Attempt direct insert to save a SELECT query roundtrip.
+      // In the extremely rare event of a room code collision, retry.
       let roomCode;
-      let isUnique = false;
-      while (!isUnique) {
+      let inserted = false;
+      let attempts = 0;
+      
+      while (!inserted && attempts < 5) {
+        attempts++;
         roomCode = generateRoomCode();
-        const { rows } = await query('SELECT 1 FROM rooms WHERE code = $1', [roomCode]);
-        if (rows.length === 0) {
-          isUnique = true;
+        try {
+          await query(
+            'INSERT INTO rooms (code, host_id) VALUES ($1, $2)',
+            [roomCode, creatorClerkId]
+          );
+          inserted = true;
+        } catch (dbErr) {
+          // Unique key violation code in PostgreSQL is '23505'
+          if (dbErr.code === '23505' && attempts < 5) {
+            console.warn(`[Room] Collision detected for code ${roomCode}, retrying...`);
+            continue;
+          }
+          throw dbErr;
         }
       }
-
-      // Insert room into PostgreSQL database
-      await query(
-        'INSERT INTO rooms (code, host_id) VALUES ($1, $2)',
-        [roomCode, creatorClerkId]
-      );
 
       // Initialize room in-memory for socket tracking
       rooms.set(roomCode, {
         users: new Map(),
         createdAt: Date.now(),
+        isNew: true, // Mark as brand new room
       });
 
       const room = rooms.get(roomCode);
@@ -148,20 +157,26 @@ function registerSocketHandlers(io, socket) {
 
       const code = (roomCode || '').toUpperCase().trim();
 
-      // Check if room exists and is active in database
-      const { rows: roomRows } = await query(
-        'SELECT * FROM rooms WHERE code = $1 AND active = true',
-        [code]
-      );
-      if (roomRows.length === 0) {
-        return callback({ error: 'Room not found. Please check the room code.' });
+      // Check if room exists: check in-memory first to save a DB query
+      let room = rooms.get(code);
+      let roomExists = !!room;
+
+      if (!roomExists) {
+        // Check if room exists and is active in database
+        const { rows: roomRows } = await query(
+          'SELECT * FROM rooms WHERE code = $1 AND active = true',
+          [code]
+        );
+        if (roomRows.length === 0) {
+          return callback({ error: 'Room not found. Please check the room code.' });
+        }
+        roomExists = true;
       }
 
       // Sync user profile if in bypass mode
       const joiningClerkId = await syncBypassUser(socket, userName, userLang);
 
       // Initialize in-memory presence room if server restarted
-      let room = rooms.get(code);
       if (!room) {
         room = {
           users: new Map(),
@@ -205,15 +220,22 @@ function registerSocketHandlers(io, socket) {
 
       console.log(`[Room] ${socket.user.username} joined room ${code}`);
 
-      // Query last 50 room messages from PostgreSQL
-      const { rows: dbMessages } = await query(
-        `SELECT m.*, u.username as sender_name, u.language as sender_lang 
-         FROM messages m 
-         JOIN users u ON m.sender_id = u.clerk_id 
-         WHERE m.room_code = $1 
-         ORDER BY m.timestamp ASC LIMIT 50`,
-        [code]
-      );
+      // Query last 50 room messages from PostgreSQL (skip if brand new room)
+      let dbMessages = [];
+      if (room.isNew) {
+        // Brand new room, no historical messages exist yet
+        room.isNew = false;
+      } else {
+        const { rows } = await query(
+          `SELECT m.*, u.username as sender_name, u.language as sender_lang 
+           FROM messages m 
+           JOIN users u ON m.sender_id = u.clerk_id 
+           WHERE m.room_code = $1 
+           ORDER BY m.timestamp ASC LIMIT 50`,
+          [code]
+        );
+        dbMessages = rows;
+      }
 
       // Format message history mapping translations correctly
       const historyMessages = dbMessages.map((row) => {

@@ -208,6 +208,27 @@ function startDatabaseCleanup() {
   setInterval(runCleanup, CLEANUP_INTERVAL);
 }
 
+// ── Periodic Database Keep-Alive ──────────────────
+function startDatabaseKeepAlive() {
+  const KEEPALIVE_INTERVAL = 4 * 60 * 1000; // Run every 4 minutes to prevent Neon auto-suspend
+  
+  const runPing = async () => {
+    try {
+      const start = Date.now();
+      await query('SELECT 1');
+      console.log(`[Database Keep-Alive] Ping successful in ${Date.now() - start}ms`);
+    } catch (err) {
+      console.error('[Database Keep-Alive] Ping failed:', err.message);
+    }
+  };
+
+  // Run once shortly after startup
+  setTimeout(runPing, 5000);
+  
+  // Schedule periodically
+  setInterval(runPing, KEEPALIVE_INTERVAL);
+}
+
 // ── Boot Server ───────────────────────────────────
 async function startServer() {
   try {
@@ -216,6 +237,9 @@ async function startServer() {
     
     // Start periodic cleanup of chats/rooms older than 24 hours
     startDatabaseCleanup();
+    
+    // Start periodic database keep-alive pings
+    startDatabaseKeepAlive();
     
     server.listen(PORT, () => {
       console.log('');
