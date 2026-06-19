@@ -1,5 +1,8 @@
 # Render Blueprint — deploy LinguaChat as a single Web Service
 # https://render.com/docs/blueprint-spec
+#
+# IMPORTANT: All secret values are managed through the Render Dashboard.
+# Never commit real credentials here. Use 'sync: false' for secrets.
 
 services:
   - type: web
@@ -17,10 +20,10 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        value: "postgresql://neondb_owner:REDACTED@ep-round-brook-ahx9w7yv-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+        sync: false  # Set in Render Dashboard — never commit secrets
       - key: CLERK_SECRET_KEY
-        value: "REDACTED"
+        sync: false  # Set in Render Dashboard — never commit secrets
       - key: CLERK_PUBLISHABLE_KEY
-        value: "pk_test_Y3V0ZS11bmljb3JuLTEzLmNsZXJrLmFjY291bnRzLmRldiQ"
+        sync: false  # Set in Render Dashboard — never commit secrets
       - key: VITE_CLERK_PUBLISHABLE_KEY
-        value: "pk_test_Y3V0ZS11bmljb3JuLTEzLmNsZXJrLmFjY291bnRzLmRldiQ"
+        sync: false  # Set in Render Dashboard — never commit secrets

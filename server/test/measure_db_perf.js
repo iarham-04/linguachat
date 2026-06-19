@@ -4,10 +4,15 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://neondb_owner:REDACTED@ep-round-brook-ahx9w7yv-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ DATABASE_URL environment variable is required. Set it in your .env file.');
+  process.exit(1);
+}
 
 async function testPerf() {
-  console.log('Connecting to database:', connectionString);
+  console.log('Connecting to database...');
   const pool = new Pool({
     connectionString,
     ssl: { rejectUnauthorized: false }
