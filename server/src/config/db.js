@@ -51,8 +51,14 @@ async function initDb() {
         code VARCHAR(6) PRIMARY KEY,
         host_id VARCHAR(255) REFERENCES users(clerk_id) ON DELETE CASCADE,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        active BOOLEAN DEFAULT TRUE
+        active BOOLEAN DEFAULT TRUE,
+        max_users INT DEFAULT 4
       );
+    `);
+
+    // Run schema updates to support room type capacity constraints
+    await client.query(`
+      ALTER TABLE rooms ADD COLUMN IF NOT EXISTS max_users INT DEFAULT 4;
     `);
 
     // 3. Create messages table
@@ -65,8 +71,17 @@ async function initDb() {
         translations JSONB NOT NULL,
         timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         is_edited BOOLEAN DEFAULT FALSE,
-        is_unsent BOOLEAN DEFAULT FALSE
+        is_unsent BOOLEAN DEFAULT FALSE,
+        message_type VARCHAR(20) DEFAULT 'text',
+        file_name TEXT
       );
+    `);
+
+    // Run schema updates to support file sharing metadata
+    await client.query(`
+      ALTER TABLE messages 
+      ADD COLUMN IF NOT EXISTS message_type VARCHAR(20) DEFAULT 'text',
+      ADD COLUMN IF NOT EXISTS file_name TEXT;
     `);
 
     // 4. Create performance indexes for message lookups

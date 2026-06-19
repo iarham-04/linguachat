@@ -156,15 +156,28 @@ export default function ChatRoom() {
     };
   }, [socket, roomCode]);
 
-  const handleSendMessage = (text) => {
+  const handleSendMessage = (text, file) => {
     if (!socket || !roomCode) return;
-    if (editingMessage) {
-      const encryptedText = encryptMessage(text, roomCode);
-      socket.emit('edit-message', { messageId: editingMessage.id, text: encryptedText, roomCode });
-      setEditingMessage(null);
-    } else {
-      const encryptedText = encryptMessage(text, roomCode);
-      socket.emit('send-message', { text: encryptedText, roomCode });
+
+    if (file) {
+      const encryptedData = encryptMessage(file.data, roomCode);
+      socket.emit('send-message', {
+        text: encryptedData,
+        messageType: file.type,
+        fileName: file.name,
+        roomCode
+      });
+    }
+
+    if (text && text.trim()) {
+      if (editingMessage) {
+        const encryptedText = encryptMessage(text, roomCode);
+        socket.emit('edit-message', { messageId: editingMessage.id, text: encryptedText, roomCode });
+        setEditingMessage(null);
+      } else {
+        const encryptedText = encryptMessage(text, roomCode);
+        socket.emit('send-message', { text: encryptedText, roomCode });
+      }
     }
   };
 

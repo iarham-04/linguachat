@@ -76,7 +76,7 @@ function registerSocketHandlers(io, socket) {
   console.log(`[Socket] Connected: ${socket.id}`);
 
   // ── Create Room ───────────────────────────────────
-  socket.on('create-room', async ({ userName, userLang }, callback) => {
+  socket.on('create-room', async ({ userName, userLang, roomType }, callback) => {
     try {
       if (!userName || !userName.trim()) {
         return callback({ error: 'Display name is required' });
@@ -87,6 +87,9 @@ function registerSocketHandlers(io, socket) {
 
       // Sync user profile if in bypass mode
       const creatorClerkId = await syncBypassUser(socket, userName, userLang);
+
+      // Determine max capacity
+      const maxUsers = roomType === 'pair' ? 2 : 4;
 
       // Attempt direct insert to save a SELECT query roundtrip.
       // In the extremely rare event of a room code collision, retry.
@@ -99,8 +102,8 @@ function registerSocketHandlers(io, socket) {
         roomCode = generateRoomCode();
         try {
           await query(
-            'INSERT INTO rooms (code, host_id) VALUES ($1, $2)',
-            [roomCode, creatorClerkId]
+            'INSERT INTO rooms (code, host_id, max_users) VALUES ($1, $2, $3)',
+            [roomCode, creatorClerkId, maxUsers]
           );
           inserted = true;
         } catch (dbErr) {
@@ -118,6 +121,7 @@ function registerSocketHandlers(io, socket) {
         users: new Map(),
         createdAt: Date.now(),
         isNew: true, // Mark as brand new room
+        maxUsers,
       });
 
       const room = rooms.get(roomCode);
@@ -162,6 +166,7 @@ function registerSocketHandlers(io, socket) {
       // Check if room exists: check in-memory first to save a DB query
       let room = rooms.get(code);
       let roomExists = !!room;
+      let dbMaxUsers = 4;
 
       if (!roomExists) {
         // Check if room exists and is active in database
@@ -173,6 +178,7 @@ function registerSocketHandlers(io, socket) {
           return callback({ error: 'Room not found. Please check the room code.' });
         }
         roomExists = true;
+        dbMaxUsers = roomRows[0].max_users || 4;
       }
 
       // Sync user profile if in bypass mode
@@ -183,6 +189,7 @@ function registerSocketHandlers(io, socket) {
         room = {
           users: new Map(),
           createdAt: Date.now(),
+          maxUsers: dbMaxUsers,
         };
         rooms.set(code, room);
       }
@@ -199,9 +206,10 @@ function registerSocketHandlers(io, socket) {
       }
 
       // Capacity verification
+      const maxUsers = room.maxUsers || 4;
       const effectiveSize = room.users.size - socketsToRemove.length;
-      if (effectiveSize >= 4) {
-        return callback({ error: 'Room is full (max 4 users)' });
+      if (effectiveSize >= maxUsers) {
+        return callback({ error: `Room is full (max ${maxUsers} users)` });
       }
 
       // Remove replaced client socket entries
@@ -244,7 +252,12 @@ function registerSocketHandlers(io, socket) {
       const historyMessages = dbMessages.map((row) => {
         const translations = row.translations || {};
         const receiverLang = socket.user.language;
-        const translatedText = translations[receiverLang] || row.original_text;
+        
+        // If it's a file/image, translatedText is original base64
+        const isTextMessage = !row.message_type || row.message_type === 'text';
+        const translatedText = isTextMessage 
+          ? (translations[receiverLang] || row.original_text)
+          : row.original_text;
 
         return {
           id: row.id,
@@ -254,6 +267,8 @@ function registerSocketHandlers(io, socket) {
           senderLang: row.sender_lang,
           originalText: row.original_text,
           translatedText: translatedText,
+          messageType: row.message_type || 'text',
+          fileName: row.file_name || null,
           timestamp: new Date(row.timestamp).getTime(),
           isEdited: row.is_edited,
           isUnsent: row.is_unsent,
@@ -380,7 +395,7 @@ function registerSocketHandlers(io, socket) {
   });
 
   // ── Send Message ──────────────────────────────────
-  socket.on('send-message', async ({ text, roomCode }) => {
+  socket.on('send-message', async ({ text, messageType, fileName, roomCode }) => {
     try {
       if (!text || !text.trim()) return;
 
@@ -399,8 +414,11 @@ function registerSocketHandlers(io, socket) {
       const originalText = decryptedText.trim();
       const timestamp = Date.now();
       const messageId = uuidv4();
+      const isTextMessage = !messageType || messageType === 'text';
 
-      socket.to(code).emit('translating', { senderName: socket.user.username });
+      if (isTextMessage) {
+        socket.to(code).emit('translating', { senderName: socket.user.username });
+      }
 
       // Gather recipient languages
       const recipientLangs = [];
@@ -410,25 +428,30 @@ function registerSocketHandlers(io, socket) {
         }
       }
 
-      // Translate per recipient language
-      const translations = await translateForRecipients(
-        originalText,
-        socket.user.language,
-        recipientLangs
-      );
+      // Translate per recipient language (only for text messages)
+      let translations = {};
+      if (isTextMessage) {
+        translations = await translateForRecipients(
+          originalText,
+          socket.user.language,
+          recipientLangs
+        );
+      }
 
       // Encrypt payloads for database and propagation
       const encryptedOriginalText = encryptMessage(originalText, code);
       const encryptedTranslations = {};
-      for (const lang in translations) {
-        encryptedTranslations[lang] = encryptMessage(translations[lang], code);
+      if (isTextMessage) {
+        for (const lang in translations) {
+          encryptedTranslations[lang] = encryptMessage(translations[lang], code);
+        }
       }
 
       // Persist to PostgreSQL database
       await query(
-        `INSERT INTO messages (id, room_code, sender_id, original_text, translations, timestamp) 
-         VALUES ($1, $2, $3, $4, $5, to_timestamp($6 / 1000.0))`,
-        [messageId, code, socket.user.clerkId, encryptedOriginalText, encryptedTranslations, timestamp]
+        `INSERT INTO messages (id, room_code, sender_id, original_text, translations, timestamp, message_type, file_name) 
+         VALUES ($1, $2, $3, $4, $5, to_timestamp($6 / 1000.0), $7, $8)`,
+        [messageId, code, socket.user.clerkId, encryptedOriginalText, encryptedTranslations, timestamp, messageType || 'text', fileName || null]
       );
 
       // Send confirmation to sender
@@ -440,6 +463,8 @@ function registerSocketHandlers(io, socket) {
         senderLang: socket.user.language,
         translatedText: encryptedOriginalText,
         originalText: encryptedOriginalText,
+        messageType: messageType || 'text',
+        fileName: fileName || null,
         isOwn: true,
         timestamp,
       });
@@ -447,7 +472,9 @@ function registerSocketHandlers(io, socket) {
       // Broadcast to individual clients
       for (const [sid, user] of room.users) {
         if (sid !== socket.id) {
-          const translatedText = translations[user.lang] || originalText;
+          const translatedText = isTextMessage 
+            ? (translations[user.lang] || originalText)
+            : originalText;
           const encryptedTranslatedText = encryptMessage(translatedText, code);
           io.to(sid).emit('receive-message', {
             id: messageId,
@@ -457,6 +484,8 @@ function registerSocketHandlers(io, socket) {
             senderLang: socket.user.language,
             translatedText: encryptedTranslatedText,
             originalText: encryptedOriginalText,
+            messageType: messageType || 'text',
+            fileName: fileName || null,
             isOwn: false,
             timestamp,
           });

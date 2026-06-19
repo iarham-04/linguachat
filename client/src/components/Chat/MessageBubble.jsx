@@ -4,6 +4,7 @@ import { parseNameAndAvatar } from '../../utils/avatar';
 
 export default function MessageBubble({ message, onEdit, onUnsend }) {
   const [showOriginal, setShowOriginal] = useState(false);
+  const [isOpenImage, setIsOpenImage] = useState(false);
   const isOwn = message.isOwn;
   const flag = getFlag(message.senderLang);
   const langName = getLanguageName(message.senderLang);
@@ -19,6 +20,7 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
   const isEmojiAvatar = avatarContent.length > 1 || avatarContent.charCodeAt(0) > 127;
   
   const elapsed = Date.now() - message.timestamp;
+  const isTextMessage = !message.messageType || message.messageType === 'text';
   const canModify = isOwn && (elapsed < 120000); // 2 minutes
 
   const getAvatarGradient = (name) => {
@@ -71,12 +73,40 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
               : 'bg-theme-bubble-other text-[var(--theme-bubble-other-text)] rounded-tl-sm border border-theme-divider'
           }`}
         >
-          <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap">
-            {message.translatedText}
-          </p>
+          {message.messageType === 'image' ? (
+            <div className="my-1 max-w-sm rounded-xl overflow-hidden cursor-pointer hover:opacity-95 transition-opacity" onClick={() => setIsOpenImage(true)}>
+              <img
+                src={message.translatedText}
+                alt={message.fileName || "Shared Image"}
+                className="max-h-60 rounded-xl object-contain bg-black/10 border border-theme-divider"
+              />
+            </div>
+          ) : message.messageType === 'file' ? (
+            <div className="my-1 flex items-center gap-3 bg-theme-sidebar border border-theme-divider rounded-xl p-3 max-w-xs select-none">
+              <div className="w-10 h-10 rounded-lg bg-theme-panel border border-theme-divider flex items-center justify-center text-xl flex-shrink-0">
+                📄
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-theme-primary truncate" title={message.fileName}>
+                  {message.fileName || 'Shared File'}
+                </p>
+                <a
+                  href={message.translatedText}
+                  download={message.fileName || 'file'}
+                  className="inline-block mt-1 text-[10px] font-semibold text-theme-accent hover:underline"
+                >
+                  Download
+                </a>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap">
+              {message.translatedText}
+            </p>
+          )}
 
           {/* Show original button toggle */}
-          {wasTranslated && (
+          {wasTranslated && isTextMessage && (
             <div className="mt-2 flex flex-col items-start border-t border-theme-divider pt-1.5">
               <button
                 onClick={() => setShowOriginal(!showOriginal)}
@@ -105,13 +135,15 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
 
       {isOwn && canModify && (
         <div className="flex gap-1 opacity-60 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity self-center mr-1.5 flex-shrink-0 select-none">
-          <button
-            onClick={() => onEdit(message.id, message.originalText)}
-            className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-theme-bubble-own border border-theme-divider text-theme-secondary hover:text-theme-primary text-[11px] cursor-pointer active:scale-90 transition-all"
-            title="Edit message"
-          >
-            ✏️
-          </button>
+          {isTextMessage && (
+            <button
+              onClick={() => onEdit(message.id, message.originalText)}
+              className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-theme-bubble-own border border-theme-divider text-theme-secondary hover:text-theme-primary text-[11px] cursor-pointer active:scale-90 transition-all"
+              title="Edit message"
+            >
+              ✏️
+            </button>
+          )}
           <button
             onClick={() => onUnsend(message.id)}
             className="p-1.5 rounded-lg bg-theme-sidebar hover:bg-red-950/20 border border-theme-divider text-theme-secondary hover:text-red-400 text-[11px] cursor-pointer active:scale-90 transition-all"
@@ -129,6 +161,33 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
             isEmojiAvatar ? 'text-lg pt-0.5' : 'text-xs'
           }`}>
             {avatarContent}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox image overlay modal */}
+      {isOpenImage && (
+        <div
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[100] flex items-center justify-center p-4 cursor-pointer animate-fade-in select-none"
+          onClick={() => setIsOpenImage(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+            <img
+              src={message.translatedText}
+              alt={message.fileName || "Preview"}
+              className="max-w-full max-h-[80vh] rounded-lg object-contain shadow-2xl animate-scale-up"
+            />
+            {message.fileName && (
+              <span className="mt-4 text-xs font-semibold text-white/80 bg-black/40 px-3 py-1 rounded-full">
+                {message.fileName}
+              </span>
+            )}
+            <button
+              onClick={() => setIsOpenImage(false)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors text-xl font-bold cursor-pointer border-0"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}

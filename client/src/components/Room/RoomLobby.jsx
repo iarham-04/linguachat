@@ -90,7 +90,7 @@ export default function RoomLobby() {
     });
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = (roomType = 'group') => {
     if (!socket) {
       setError('Connection to server lost. Please try again.');
       setMode(null);
@@ -98,11 +98,13 @@ export default function RoomLobby() {
     }
     setLoading(true);
     setError('');
+    setMode('create');
 
     socket.emit('create-room', {
       userId: user.id,
       userName: user.name,
       userLang: user.lang,
+      roomType,
     }, (response) => {
       setLoading(false);
       if (response.error) {
@@ -178,7 +180,7 @@ export default function RoomLobby() {
           <div className="space-y-4 animate-fade-in">
             <button
               id="create-room-btn"
-              onClick={() => { setMode('create'); handleCreateRoom(); }}
+              onClick={() => { setMode('create_type'); }}
               className="w-full bg-theme-panel border border-theme-divider rounded-2xl p-5 text-left hover:bg-theme-sidebar 
                          transition-all duration-200 group cursor-pointer shadow-xl hover:border-theme-accent-border"
             >
@@ -212,6 +214,59 @@ export default function RoomLobby() {
                   <p className="text-xs text-theme-secondary">Enter a room code to join</p>
                 </div>
               </div>
+            </button>
+          </div>
+        )}
+
+        {/* Create Room Type Selection */}
+        {mode === 'create_type' && (
+          <div className="bg-theme-panel border border-theme-divider rounded-2xl p-6 sm:p-7 space-y-5 animate-fade-in shadow-2xl">
+            <h3 className="text-xs font-semibold text-theme-secondary uppercase tracking-wider text-center">
+              Choose Room Capacity
+            </h3>
+            
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => handleCreateRoom('group')}
+                className="w-full bg-theme-sidebar border border-theme-divider rounded-xl p-4 text-left hover:bg-theme-panel hover:border-theme-accent transition-all duration-200 group cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-theme-panel flex items-center justify-center text-xl">
+                    👥
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-theme-primary group-hover:text-theme-accent transition-colors">Group Room</h4>
+                    <p className="text-[11px] text-theme-secondary">Supports up to 4 participants</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleCreateRoom('pair')}
+                className="w-full bg-theme-sidebar border border-theme-divider rounded-xl p-4 text-left hover:bg-theme-panel hover:border-theme-accent transition-all duration-200 group cursor-pointer animate-fade-in"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-theme-panel flex items-center justify-center text-xl">
+                    👤👥
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-theme-primary group-hover:text-theme-accent transition-colors">1-on-1 Pair Room</h4>
+                    <p className="text-[11px] text-theme-secondary">Supports max 2 participants</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMode(null)}
+              className="w-full py-3 px-4 rounded-xl font-medium text-theme-secondary 
+                         bg-theme-sidebar border border-theme-divider hover:bg-theme-panel hover:text-theme-primary
+                         transition-all duration-200 text-sm"
+            >
+              Cancel
             </button>
           </div>
         )}
