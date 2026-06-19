@@ -11,6 +11,37 @@ const { isValidLanguage, getLanguageInfo } = require('../utils/languages');
 const { encryptMessage, decryptMessage } = require('../utils/crypto');
 const { query } = require('../config/db');
 
+// ── G. Socket-Level Rate Limiting ─────────────────
+const MESSAGE_RATE_LIMIT = 20;          // max messages
+const MESSAGE_RATE_WINDOW = 10 * 1000;  // per 10 seconds
+const socketMessageCounts = new Map();
+
+function isRateLimited(socketId) {
+  const now = Date.now();
+  let entry = socketMessageCounts.get(socketId);
+  if (!entry || now - entry.windowStart > MESSAGE_RATE_WINDOW) {
+    entry = { count: 1, windowStart: now };
+    socketMessageCounts.set(socketId, entry);
+    return false;
+  }
+  entry.count++;
+  return entry.count > MESSAGE_RATE_LIMIT;
+}
+
+// Cleanup stale entries every 30 seconds
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of socketMessageCounts) {
+    if (now - entry.windowStart > MESSAGE_RATE_WINDOW * 2) {
+      socketMessageCounts.delete(key);
+    }
+  }
+}, 30000);
+
+// Max text payload sizes
+const MAX_TEXT_LENGTH = 5000;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 const EDIT_TIME_LIMIT = 2 * 60 * 1000; // 2 minutes
 
 // In-memory presence tracker: Map<roomCode, { users: Map<socketId, userInfo>, createdAt: number }>
@@ -397,7 +428,17 @@ function registerSocketHandlers(io, socket) {
   // ── Send Message ──────────────────────────────────
   socket.on('send-message', async ({ text, messageType, fileName, roomCode }) => {
     try {
-      if (!text || !text.trim()) return;
+      if (!text) return;
+
+      // Rate limit check
+      if (isRateLimited(socket.id)) {
+        return socket.emit('error', { message: 'Slow down — too many messages' });
+      }
+
+      // Payload size guard
+      if (typeof text === 'string' && text.length > MAX_FILE_SIZE) {
+        return socket.emit('error', { message: 'Message payload too large' });
+      }
 
       const code = (roomCode || '').toUpperCase().trim();
       const room = rooms.get(code);

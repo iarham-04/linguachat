@@ -1,6 +1,13 @@
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { getFlag, getLanguageName } from '../../utils/languages';
 import { parseNameAndAvatar } from '../../utils/avatar';
+
+// Sanitize any user-generated text — strip ALL HTML tags and attributes
+const sanitize = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  return DOMPurify.sanitize(text, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+};
 
 export default function MessageBubble({ message, onEdit, onUnsend }) {
   const [showOriginal, setShowOriginal] = useState(false);
@@ -101,7 +108,7 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
             </div>
           ) : (
             <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap">
-              {message.translatedText}
+              {sanitize(message.translatedText)}
             </p>
           )}
 
@@ -119,7 +126,7 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
 
               {showOriginal && (
                 <p className="mt-1 text-xs text-theme-secondary italic break-words whitespace-pre-wrap leading-relaxed">
-                  {message.originalText}
+                  {sanitize(message.originalText)}
                 </p>
               )}
             </div>
