@@ -81,15 +81,15 @@ export default function MessageBubble({ message, onEdit, onUnsend }) {
           }`}
         >
           {message.messageType === 'image' ? (
-            <div className="my-1 max-w-sm rounded-xl overflow-hidden cursor-pointer hover:opacity-95 transition-opacity" onClick={() => setIsOpenImage(true)}>
+            <div className="my-1 w-full max-w-[240px] sm:max-w-sm rounded-xl overflow-hidden cursor-pointer hover:opacity-95 transition-opacity" onClick={() => setIsOpenImage(true)}>
               <img
                 src={message.translatedText}
                 alt={message.fileName || "Shared Image"}
-                className="max-h-60 rounded-xl object-contain bg-black/10 border border-theme-divider"
+                className="w-full max-h-60 rounded-xl object-contain bg-black/10 border border-theme-divider"
               />
             </div>
           ) : message.messageType === 'file' ? (
-            <div className="my-1 flex items-center gap-3 bg-theme-sidebar border border-theme-divider rounded-xl p-3 max-w-xs select-none">
+            <div className="my-1 flex items-center gap-3 bg-theme-sidebar border border-theme-divider rounded-xl p-3 w-full max-w-[240px] sm:max-w-xs select-none">
               <div className="w-10 h-10 rounded-lg bg-theme-panel border border-theme-divider flex items-center justify-center text-xl flex-shrink-0">
                 📄
               </div>

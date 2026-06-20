@@ -404,6 +404,37 @@ function startDatabaseKeepAlive() {
   setInterval(runPing, KEEPALIVE_INTERVAL);
 }
 
+// ── Periodic Server Keep-Alive (Self-Ping) ────────
+function startServerKeepAlive() {
+  const selfUrl = process.env.SELF_URL;
+  if (!selfUrl) {
+    console.log('[Server Keep-Alive] SELF_URL not configured — auto-sleep prevention disabled');
+    return;
+  }
+
+  const pingUrl = `${selfUrl.replace(/\/$/, '')}/api/health`;
+  const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes (Render spins down after 15m)
+
+  const https = require('https');
+  const http = require('http');
+  const client = pingUrl.startsWith('https') ? https : http;
+
+  const runPing = () => {
+    client.get(pingUrl, (res) => {
+      console.log(`[Server Keep-Alive] Self-ping successful: status ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.error('[Server Keep-Alive] Self-ping failed:', err.message);
+    });
+  };
+
+  // Run once shortly after startup
+  setTimeout(runPing, 10000);
+
+  // Schedule periodically
+  setInterval(runPing, PING_INTERVAL);
+  console.log(`[Server Keep-Alive] Scheduled self-ping to ${pingUrl} every 10 minutes`);
+}
+
 // ── Boot Server ───────────────────────────────────
 async function startServer() {
   try {
@@ -415,6 +446,9 @@ async function startServer() {
     
     // Start periodic database keep-alive pings
     startDatabaseKeepAlive();
+
+    // Start periodic server keep-alive pings
+    startServerKeepAlive();
     
     server.listen(PORT, () => {
       console.log('');

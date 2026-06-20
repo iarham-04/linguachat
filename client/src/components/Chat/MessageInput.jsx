@@ -221,12 +221,12 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 bg-theme-panel border-t border-theme-divider select-none relative">
+      <form onSubmit={handleSubmit} className="flex items-center gap-1.5 p-2 sm:gap-3 sm:p-4 bg-theme-panel border-t border-theme-divider select-none relative">
         {/* Floating Emoji Picker Popover */}
         {showPicker && (
           <div
             ref={pickerRef}
-            className="absolute left-2 right-2 bottom-16 sm:left-4 sm:right-auto sm:w-[260px] bg-theme-sidebar border border-theme-divider rounded-xl p-3 shadow-2xl z-30 space-y-2 animate-slide-up"
+            className="absolute left-2 right-2 bottom-14 sm:bottom-16 sm:left-4 sm:right-auto sm:w-[260px] bg-theme-sidebar border border-theme-divider rounded-xl p-3 shadow-2xl z-30 space-y-2 animate-slide-up"
           >
             <div className="flex justify-between items-center px-1">
               <span className="text-[10px] font-bold text-theme-secondary bg-transparent uppercase tracking-wider">Quick Emojis</span>
@@ -257,44 +257,44 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className="emoji-toggle-btn flex-shrink-0 w-10 h-10 rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-theme-secondary hover:text-theme-primary flex items-center justify-center transition-colors active:scale-95 pb-0.5 cursor-pointer"
+          className="emoji-toggle-btn flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-theme-secondary hover:text-theme-primary flex items-center justify-center transition-colors active:scale-95 pb-0.5 cursor-pointer"
           title="Add emoji"
         >
-          <span className="text-xl leading-none">😊</span>
+          <span className="text-lg sm:text-xl leading-none">😊</span>
         </button>
 
         {/* Camera Button */}
         <button
           type="button"
           onClick={() => setShowCamera(true)}
-          className="flex-shrink-0 w-10 h-10 rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-theme-secondary hover:text-theme-primary flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+          className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-theme-secondary hover:text-theme-primary flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
           title="Take Photo"
         >
-          <span className="text-xl leading-none">📸</span>
+          <span className="text-lg sm:text-xl leading-none">📸</span>
         </button>
 
         {/* Attachment Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex-shrink-0 w-10 h-10 rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-theme-secondary hover:text-theme-primary flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+          className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-theme-sidebar border border-theme-divider hover:bg-theme-panel text-theme-secondary hover:text-theme-primary flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
           title="Attach File"
         >
-          <span className="text-xl leading-none">📎</span>
+          <span className="text-lg sm:text-xl leading-none">📎</span>
         </button>
 
         {/* Input container */}
-        <div className="flex-1 bg-theme-sidebar border border-theme-divider rounded-xl px-2 py-1.5 flex items-center focus-within:border-theme-accent transition-colors">
+        <div className="flex-1 bg-theme-sidebar border border-theme-divider rounded-lg sm:rounded-xl px-1.5 py-1 sm:px-2 sm:py-1.5 flex items-center focus-within:border-theme-accent transition-colors">
           <textarea
             id="message-input"
             ref={inputRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={selectedFile ? "Add a message..." : "Type something..."}
+            placeholder={selectedFile ? "Add..." : "Type..."}
             disabled={disabled}
             rows={1}
-            className="w-full px-2 py-1 bg-transparent text-theme-primary placeholder-theme-secondary resize-none focus:outline-none text-base leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed scrollbar-hide"
+            className="w-full px-1.5 py-0.5 bg-transparent text-theme-primary placeholder-theme-secondary resize-none focus:outline-none text-base leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed scrollbar-hide"
             style={{ height: '32px', maxHeight: '100px' }}
             onInput={(e) => {
               e.target.style.height = 'auto';
@@ -308,7 +308,7 @@ export default function MessageInput({ onSend, disabled, editingMessage, onCance
           id="send-button"
           type="submit"
           disabled={(!text.trim() && !selectedFile) || disabled}
-          className="flex-shrink-0 px-4 h-10 rounded-xl text-white bg-theme-accent hover:bg-theme-accent-hover font-semibold text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-[var(--theme-glow)]"
+          className="flex-shrink-0 px-3 sm:px-4 h-9 sm:h-10 rounded-lg sm:rounded-xl text-white bg-theme-accent hover:bg-theme-accent-hover font-semibold text-xs sm:text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-[var(--theme-glow)]"
         >
           {editingMessage ? 'Save' : 'Send'}
         </button>

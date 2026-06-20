@@ -220,7 +220,7 @@ export default function ChatRoom() {
   }
 
   return (
-    <div className="h-[100dvh] w-screen flex items-center justify-center bg-theme-outer p-0 md:p-6 overflow-hidden">
+    <div className="h-[100dvh] w-full flex items-center justify-center bg-theme-outer p-0 md:p-6 overflow-hidden">
       {/* Outer Floating Container */}
       <div className="w-full h-full max-w-6xl md:h-[90vh] bg-theme-outer rounded-none md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.65)] border border-theme-divider flex overflow-hidden relative">
         
