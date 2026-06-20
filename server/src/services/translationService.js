@@ -41,6 +41,8 @@ function getTranslator() {
   }
 }
 
+const { translateWithCache } = require('../lib/translateWithCache');
+
 /**
  * Translate a single text string from source language to target language.
  * 
@@ -50,8 +52,15 @@ function getTranslator() {
  * @returns {Promise<string>} Translated text
  */
 async function translate(text, sourceLang, targetLang) {
-  const translator = getTranslator();
-  return translator.translate(text, sourceLang, targetLang);
+  if (sourceLang === targetLang) return text;
+  try {
+    const res = await translateWithCache(text, targetLang, sourceLang);
+    return res.translatedText;
+  } catch (err) {
+    console.warn('[TranslationService] Cache layer failed, using raw translator:', err.message);
+    const translator = getTranslator();
+    return translator.translate(text, sourceLang, targetLang);
+  }
 }
 
 /**

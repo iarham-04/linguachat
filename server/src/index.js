@@ -48,6 +48,9 @@ const { initFirebase } = require('./config/firebase');
 const { registerSocketHandlers } = require('./handlers/socketHandlers');
 const { initDb, query } = require('./config/db');
 const { ClerkExpressWithAuth, clerkClient, verifyToken } = require('@clerk/clerk-sdk-node');
+const redis = require('./lib/redis');
+const { getCacheStats } = require('./lib/translateWithCache');
+const { warmTranslationCache } = require('./lib/warmCache');
 
 // ── Configuration ─────────────────────────────────
 const PORT = process.env.PORT || 3001;
@@ -199,6 +202,71 @@ function optionalClerkAuth(req, res, next) {
   }
   ClerkExpressWithAuth()(req, res, next);
 }
+
+// Strict authentication middleware wrapper supporting BYPASS_AUTH
+function requireClerkAuth(req, res, next) {
+  if (process.env.BYPASS_AUTH === 'true') {
+    const mockUser = req.headers['x-mock-user'] || 'mock_alice';
+    req.auth = { userId: mockUser };
+    return next();
+  }
+  const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
+  ClerkExpressRequireAuth()(req, res, next);
+}
+
+// ── ADMIN CACHE MONITORING & INVALIDATION ENDPOINTS ──────────────────
+
+// Get cache stats in real time (protected)
+app.get('/api/admin/cache-stats', requireClerkAuth, async (req, res, next) => {
+  try {
+    const keys = await redis.keys('translation:*');
+    const info = await redis.info('memory');
+    const memMatch = info.match(/used_memory_human:(.+)/);
+    const memUsed = memMatch ? memMatch[1].trim() : 'unknown';
+
+    res.json({
+      ...getCacheStats(),
+      cachedTranslations: keys.length,
+      redisMemoryUsed: memUsed,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Clear ALL translation cache (nuclear option)
+app.delete('/api/admin/cache', requireClerkAuth, async (req, res, next) => {
+  try {
+    const keys = await redis.keys('translation:*');
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+    res.json({
+      message: `Cleared ${keys.length} cached translations`
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Clear cache for a specific language pair
+app.delete('/api/admin/cache/:sourceLang/:targetLang', requireClerkAuth, async (req, res, next) => {
+  try {
+    const { sourceLang, targetLang } = req.params;
+    const pattern = `translation:*:${sourceLang}:${targetLang}`;
+    const keys = await redis.keys(pattern);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+    res.json({
+      message: `Cleared ${keys.length} translations for ${sourceLang}→${targetLang}`
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 // Get current user profile from DB
 app.get('/api/users/me', optionalClerkAuth, async (req, res) => {
@@ -434,6 +502,11 @@ function startServerKeepAlive() {
   setInterval(runPing, PING_INTERVAL);
   console.log(`[Server Keep-Alive] Scheduled self-ping to ${pingUrl} every 10 minutes`);
 }
+
+// Warm cache once Redis connects successfully
+redis.on('connect', () => {
+  warmTranslationCache();
+});
 
 // ── Boot Server ───────────────────────────────────
 async function startServer() {
