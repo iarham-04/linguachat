@@ -183,7 +183,7 @@ async function runTests() {
   assert(aliceMessages[0].translatedText === 'Hello everyone!',
     'Alice sees her own message untranslated');
 
-  // ── Test 7: Max Users Limit ──────────────────────
+  // ── Test 7: Room Capacity ────────────────────────
   console.log('\n📋 Test 7: Room Capacity');
 
   const user4 = io(SERVER_URL);
@@ -191,16 +191,44 @@ async function runTests() {
   const join4 = await new Promise(resolve => {
     user4.emit('join-room', { roomCode, userName: 'Dina', userLang: 'fr' }, resolve);
   });
-  assert(join4.success, 'Dina (4th user) joined — room at max capacity');
+  assert(join4.success, 'Dina (4th user) joined group room successfully');
 
   const user5 = io(SERVER_URL);
   await new Promise(resolve => user5.on('connect', resolve));
   const join5 = await new Promise(resolve => {
     user5.emit('join-room', { roomCode, userName: 'Eve', userLang: 'de' }, resolve);
   });
-  assert(join5.error !== undefined, '5th user rejected — room is full');
+  assert(join5.success, 'Eve (5th user) joined group room successfully (unlimited group capacity)');
+  assert(join5.users && join5.users.length === 5, '5 users currently in group room');
 
   user5.disconnect();
+
+  // Test pair room capacity limit (max 2 users)
+  const pairClient1 = io(SERVER_URL);
+  await new Promise(resolve => pairClient1.on('connect', resolve));
+  const pairCreate = await new Promise(resolve => {
+    pairClient1.emit('create-room', { userName: 'AlicePair', userLang: 'en', roomType: 'pair' }, resolve);
+  });
+  assert(pairCreate.success, 'Pair room created successfully');
+  const pairRoomCode = pairCreate.roomCode;
+
+  const pairClient2 = io(SERVER_URL);
+  await new Promise(resolve => pairClient2.on('connect', resolve));
+  const pairJoin2 = await new Promise(resolve => {
+    pairClient2.emit('join-room', { roomCode: pairRoomCode, userName: 'BorisPair', userLang: 'ru' }, resolve);
+  });
+  assert(pairJoin2.success, 'Second user joined pair room successfully');
+
+  const pairClient3 = io(SERVER_URL);
+  await new Promise(resolve => pairClient3.on('connect', resolve));
+  const pairJoin3 = await new Promise(resolve => {
+    pairClient3.emit('join-room', { roomCode: pairRoomCode, userName: 'CharliePair', userLang: 'es' }, resolve);
+  });
+  assert(pairJoin3.error !== undefined, 'Third user rejected from pair room — pair room is full');
+
+  pairClient1.disconnect();
+  pairClient2.disconnect();
+  pairClient3.disconnect();
 
   // ── Test 8: Live Language Switching ────────────────
   console.log('\n📋 Test 8: Live Language Switching');
