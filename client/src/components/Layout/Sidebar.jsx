@@ -6,7 +6,7 @@ import { parseNameAndAvatar, ANIMAL_AVATARS } from '../../utils/avatar';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function Sidebar({ users, roomCode, onLeave, onClose }) {
-  const { user, changeLanguage, updateProfile } = useUser();
+  const { user, changeLanguage, updateProfile, logout } = useUser();
   const { socket } = useSocket();
   const { theme, setTheme, themes } = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -15,6 +15,14 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
   const [editAvatar, setEditAvatar] = useState('');
   const [profileError, setProfileError] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
+
+  const handleSignOut = () => {
+    if (socket) {
+      socket.disconnect();
+      socket.connect();
+    }
+    logout();
+  };
 
   const toggleSettings = () => {
     if (!settingsOpen) {
@@ -225,16 +233,28 @@ export default function Sidebar({ users, roomCode, onLeave, onClose }) {
                   </div>
                 </div>
 
-                <button
-                  id="leave-room-btn"
-                  onClick={onLeave}
-                  className="w-full py-2 px-3 rounded-lg text-xs font-semibold
-                             text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/80 
-                             border border-red-500/20 hover:border-transparent
-                             transition-all duration-200"
-                >
-                  Leave Room
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    id="leave-room-btn"
+                    onClick={onLeave}
+                    className="w-full py-2 px-3 rounded-lg text-xs font-semibold
+                               text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/80 
+                               border border-red-500/20 hover:border-transparent
+                               transition-all duration-200"
+                  >
+                    Leave Room
+                  </button>
+
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full py-2 px-3 rounded-lg text-xs font-semibold
+                               text-gray-400 hover:text-white bg-theme-sidebar hover:bg-red-500/80 
+                               border border-theme-divider hover:border-transparent
+                               transition-all duration-200"
+                  >
+                    Sign Out
+                  </button>
+                </div>
               </div>
             )}
 

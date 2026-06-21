@@ -19,7 +19,7 @@ const getRelativeTimeString = (timestamp) => {
 
 export default function RoomLobby() {
   const { socket } = useSocket();
-  const { user, joinRoom } = useUser();
+  const { user, joinRoom, logout } = useUser();
   const [mode, setMode] = useState(null); // null | 'create' | 'join'
   const [roomInput, setRoomInput] = useState('');
   const [error, setError] = useState('');
@@ -28,6 +28,14 @@ export default function RoomLobby() {
   const [recentRooms, setRecentRooms] = useState([]);
 
   useEffect(() => {
+    // Check URL parameters for shared room link
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if (roomParam && roomParam.length === 6) {
+      setRoomInput(roomParam.toUpperCase());
+      setMode('join');
+    }
+
     const loadRecentRooms = () => {
       try {
         const stored = localStorage.getItem('linguachat_recent_rooms');
@@ -159,8 +167,18 @@ export default function RoomLobby() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-theme-sidebar mb-3 border border-theme-divider shadow-lg">
             <span className="text-3xl">💬</span>
           </div>
-          <h2 className="text-2xl font-bold text-theme-primary">
+          <h2 className="text-2xl font-bold text-theme-primary flex items-center justify-center gap-2">
             Welcome, <span className="font-extrabold">{user?.name}</span>
+            <button
+              onClick={logout}
+              className="p-1.5 rounded-lg hover:bg-theme-sidebar border border-transparent hover:border-theme-divider text-gray-400 hover:text-red-400 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
+              title="Sign Out"
+              type="button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+              </svg>
+            </button>
           </h2>
           {/* Gold/Yellow Underline Accent */}
           <div className="w-10 h-[3px] bg-[#f0c040] rounded mt-2.5 mb-2.5" />

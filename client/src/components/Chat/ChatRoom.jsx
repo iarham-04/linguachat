@@ -16,8 +16,17 @@ export default function ChatRoom() {
   const [translating, setTranslating] = useState(null);
   const [activePanel, setActivePanel] = useState('chat'); // 'sidebar' | 'chat'
   const [editingMessage, setEditingMessage] = useState(null); // null | { id, text }
+  const [copied, setCopied] = useState(false);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+
+  const handleCopyShareLink = useCallback(() => {
+    const link = `${window.location.origin}/?room=${roomCode}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [roomCode]);
 
   // Auto-scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -297,10 +306,26 @@ export default function ChatRoom() {
                   <span className="text-3xl">🌍</span>
                 </div>
                 <h3 className="text-base font-bold text-theme-primary mb-1">Room is ready!</h3>
-                <p className="text-theme-secondary text-xs max-w-xs leading-relaxed">
+                <p className="text-theme-secondary text-xs max-w-xs leading-relaxed mb-4">
                   Share the room code <span className="font-mono text-[#f0c040] font-bold">{roomCode}</span> with
                   others to start chatting across languages.
                 </p>
+                
+                {/* Share Link Option */}
+                <div className="w-full max-w-xs p-1 bg-theme-sidebar border border-theme-divider rounded-xl flex items-center gap-2 pointer-events-auto select-text shadow-md">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/?room=${roomCode}`}
+                    className="flex-1 bg-transparent border-none text-[11px] font-mono text-theme-secondary px-2 focus:outline-none truncate"
+                  />
+                  <button
+                    onClick={handleCopyShareLink}
+                    className="flex-shrink-0 px-3.5 py-1.5 rounded-lg bg-theme-accent hover:bg-theme-accent-hover text-white text-[11px] font-semibold transition-all active:scale-95 shadow-sm cursor-pointer"
+                  >
+                    {copied ? 'Copied! 📋' : 'Copy Link 🔗'}
+                  </button>
+                </div>
               </div>
             )}
 
