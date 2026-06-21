@@ -119,8 +119,8 @@ function registerSocketHandlers(io, socket) {
       // Sync user profile if in bypass mode
       const creatorClerkId = await syncBypassUser(socket, userName, userLang);
 
-      // Determine max capacity
-      const maxUsers = roomType === 'pair' ? 2 : 4;
+      // Determine max capacity (Pair room supports 2 users, Group room supports up to 1000 users)
+      const maxUsers = roomType === 'pair' ? 2 : 1000;
 
       // Attempt direct insert to save a SELECT query roundtrip.
       // In the extremely rare event of a room code collision, retry.
@@ -236,8 +236,8 @@ function registerSocketHandlers(io, socket) {
         }
       }
 
-      // Capacity verification
-      const maxUsers = room.maxUsers || 4;
+      // Capacity verification (Treat any group room, including legacy 4-max rooms, as having a 1000 capacity)
+      const maxUsers = room.maxUsers === 2 ? 2 : 1000;
       const effectiveSize = room.users.size - socketsToRemove.length;
       if (effectiveSize >= maxUsers) {
         return callback({ error: `Room is full (max ${maxUsers} users)` });

@@ -255,7 +255,7 @@ export default function RoomLobby() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-theme-primary group-hover:text-theme-accent transition-colors">Group Room</h4>
-                    <p className="text-[11px] text-theme-secondary">Supports up to 4 participants</p>
+                    <p className="text-[11px] text-theme-secondary">Supports unlimited participants</p>
                   </div>
                 </div>
               </button>
